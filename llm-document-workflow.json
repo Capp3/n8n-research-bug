@@ -1,0 +1,740 @@
+{
+  "name": "LLM Document Conversation Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "AI Document Editor",
+        "formDescription": "Submit your document for AI enhancement and research expansion",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Project Name",
+              "fieldType": "text",
+              "fieldName": "project_name",
+              "requiredField": true,
+              "placeholder": "e.g., drone-regulations-uk-ireland"
+            },
+            {
+              "fieldLabel": "Markdown Document",
+              "fieldType": "textarea",
+              "fieldName": "markdown_document",
+              "requiredField": true,
+              "placeholder": "Paste your existing markdown document here..."
+            },
+            {
+              "fieldLabel": "Research Requirements",
+              "fieldType": "textarea",
+              "fieldName": "personal_thoughts",
+              "requiredField": true,
+              "placeholder": "Describe what research and improvements you need..."
+            },
+            {
+              "fieldLabel": "Research Scope",
+              "fieldType": "dropdown",
+              "fieldName": "research_scope",
+              "fieldOptions": {
+                "values": [
+                  {"option": "basic"},
+                  {"option": "comprehensive"},
+                  {"option": "regulatory"}
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "GitHub Owner",
+              "fieldType": "text",
+              "fieldName": "github_owner",
+              "requiredField": true,
+              "placeholder": "your-username"
+            },
+            {
+              "fieldLabel": "GitHub Repository",
+              "fieldType": "text",
+              "fieldName": "github_repo",
+              "requiredField": true,
+              "placeholder": "documents"
+            }
+          ]
+        },
+        "options": {
+          "buttonLabel": "Start AI Enhancement"
+        }
+      },
+      "id": "n8n-form-trigger",
+      "name": "Document Editor Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Generate conversation ID and initialize workflow state\nconst timestamp = new Date().toISOString();\nconst conversationId = `${$json.project_name}-${Date.now()}`;\n\nreturn [{\n  json: {\n    ...items[0].json,\n    conversation_id: conversationId,\n    created_at: timestamp,\n    research_scope: $json.research_scope || 'comprehensive',\n    workflow_state: 'initialized'\n  }\n}];"
+      },
+      "id": "generate-conversation-id",
+      "name": "Generate Conversation ID",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "owner": "={{$json.github_owner}}",
+        "repository": "={{$json.github_repo}}",
+        "filePath": "docs/{{$json.project_name}}.md",
+        "fileContent": "={{$json.markdown_document}}",
+        "commitMessage": "Initial document: {{$json.project_name}}"
+      },
+      "id": "github-create-file",
+      "name": "GitHub Create File",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "credentials": {
+        "githubApi": {
+          "id": "github-credentials",
+          "name": "GitHub API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionId": "={{$json.conversation_id}}",
+        "text": "=You are starting a new collaborative document editing and research session.\n\nTASK OVERVIEW:\n- Analyze the provided document for structure, completeness, and clarity  \n- Apply the operator's research requirements and expansion requests\n- Conduct any necessary research to fulfill the requirements\n- Create a comprehensive, well-structured document\n- Ensure the document meets professional standards\n\nDocument Title: {{$json.project_name}}\nInitial Document:\n---\n{{$json.markdown_document}}\n---\nResearch and Expansion Requirements:\n{{$json.personal_thoughts}}\n\nDELIVERABLE:\nReturn a complete, enhanced markdown document that addresses all requirements. Include:\n1. Improved structure and organization\n2. Research findings integrated naturally  \n3. Clear section divisions\n4. Professional formatting\n5. Table of contents if document exceeds 1000 words\n\nReturn ONLY the updated markdown document.",
+        "options": {}
+      },
+      "id": "ai-agent-initial",
+      "name": "AI Agent - Initial Enhancement",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Build retrieval query from project context and latest request\nconst parts = [];\nif ($json.project_name) parts.push($json.project_name);\nif ($json.personal_thoughts) parts.push($json.personal_thoughts);\nif ($json.telegram_message) parts.push($json.telegram_message);\nconst query = parts.join(' \n');\nreturn [{ json: { ...items[0].json, retrieval_query: query.slice(0, 4000) } }];"
+      },
+      "id": "build-retrieval-query",
+      "name": "Build Retrieval Query",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [980, 240]
+    },
+    {
+      "parameters": {
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={ \n  \"model\": \"text-embedding-3-small\",\n  \"input\": $json.retrieval_query || ''\n }"
+      },
+      "id": "embed-retrieval-query",
+      "name": "Embed Retrieval Query",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 240],
+      "credentials": {
+        "httpHeaderAuth": { "id": "openai-credentials", "name": "OpenAI API" }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT content AS chunk, chunk_index FROM chunks WHERE project_name = '{{$json.project_name}}' ORDER BY embedding <-> CAST('[{{join($json.data[0].embedding, ',')}}]' AS vector) LIMIT 6;"
+      },
+      "id": "pg-similarity-search",
+      "name": "Postgres Similarity Search",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [1260, 240],
+      "credentials": { "postgres": { "id": "postgres-credentials", "name": "Postgres" } }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Consolidate retrieved chunks into a single context string\nconst rows = items.map(i => i.json);\nconst ctx = rows.map(r => `- ${r.chunk}`).join('\n');\n// Merge with the latest draft from Editor if available\nconst base = $items(\"AI Agent - Initial Enhancement\", 0, 0).json || {};\nreturn [{ json: { ...base, retrieved_context: ctx } }];"
+      },
+      "id": "format-retrieved-context",
+      "name": "Format Retrieved Context",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1400, 240]
+    },
+    {
+      "parameters": {
+        "sessionId": "={{$json.conversation_id}}",
+        "text": "=You are a Research Agent with access to MCP tools via Context7.\n\nCONTEXT (retrieved):\n{{$json.retrieved_context || ''}}\n\nGOAL:\n- Produce a research_addendum (markdown) with citations and comparative tables relevant to the user's requirements and current draft.\n- Keep to facts; add links and references.\n\nINPUTS:\n- Project: {{$json.project_name}}\n- Research scope: {{$json.research_scope}}\n- Current draft (from Editor): {{$json.output || $json.parsed_content || ''}}\n\nOUTPUT:\n- Return ONLY markdown addendum suitable for direct insertion, with inline links and a References section at the end.",
+        "options": {}
+      },
+      "id": "ai-agent-research",
+      "name": "AI Agent - Research (Context7 Tools)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse research addendum and basic citations from agent output\nconst output = $json.output || $json.text || '';\nconst links = Array.from(output.matchAll(/https?:\\/\\/[^\\s)]+/g)).map(m => m[0]);\nreturn [{ json: { ...items[0].json, research_addendum: output.trim(), citations: links } }];"
+      },
+      "id": "parse-research-output",
+      "name": "Parse Research Output",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.CONTEXT7_API_BASE || 'https://context7.local' }}/mcp/document/analyze",
+        "authentication": "none",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={ \n  \"content\": $json.research_addendum || $json.output || $json.parsed_content || '',\n  \"project\": $json.project_name,\n  \"scope\": $json.research_scope \n}"
+      },
+      "id": "context7-doc-analyzer",
+      "name": "Context7 MCP - Document Analyzer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "sessionId": "={{$json.conversation_id}}",
+        "text": "=You are a Reviewer Agent. Assess structure, clarity, tone, and consistency.\n\nINPUTS:\n- Draft + Research Addendum: {{$json.research_addendum || ''}}\n- Analyzer findings (JSON): {{$json.body || ''}}\n\nOUTPUT:\n- Return reviewer_notes (bulleted markdown) and highlight issues.\n- Keep it concise and actionable.",
+        "options": {}
+      },
+      "id": "ai-agent-reviewer",
+      "name": "AI Agent - Reviewer",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [1780, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extract reviewer notes as markdown; simple pass-through\nconst output = $json.output || $json.text || '';\nreturn [{ json: { ...items[0].json, reviewer_notes: output.trim(), quality_flags: { advisory: true } } }];"
+      },
+      "id": "parse-review-output",
+      "name": "Parse Review Output",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2000, 300]
+    },
+    {
+      "parameters": {
+        "sessionId": "={{$json.conversation_id}}",
+        "text": "=You are the Editor Agent. Merge the current draft with Research Addendum and apply Reviewer Notes.\n\nINPUTS:\n- Current draft: {{$json.parsed_content || $json.output || ''}}\n- Research addendum: {{$json.research_addendum || ''}}\n- Reviewer notes: {{$json.reviewer_notes || ''}}\n\nGOAL:\n- Produce the final, complete markdown.\n- Maintain professional formatting, headings, and references.",
+        "options": {}
+      },
+      "id": "ai-agent-editor-merge",
+      "name": "AI Agent - Editor Merge",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [2220, 300]
+    },
+    {
+      "parameters": {
+        "sessionId": "={{$json.conversation_id}}",
+        "k": 10
+      },
+      "id": "memory-buffer-window",
+      "name": "Memory Buffer Window",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Enhanced output parser with quality scoring for AI Agent response\nconst content = $json.output || $json.text || '';\n\n// Validate markdown structure\nconst lines = content.split('\\n');\nconst hasHeadings = lines.some(line => /^#+\\s/.test(line.trim()));\nconst hasProperStructure = content.includes('# ') || content.includes('## ');\nconst hasTableOfContents = content.includes('## Table of Contents') || content.includes('# Table of Contents');\n\n// Calculate quality scores (simplified for demo)\nfunction calculateStructureScore(content) {\n  let score = 0;\n  if (hasHeadings) score += 0.3;\n  if (hasProperStructure) score += 0.3;\n  if (hasTableOfContents) score += 0.2;\n  if (content.includes('##')) score += 0.2; // Has subsections\n  return Math.min(score, 1.0);\n}\n\nfunction calculateCompletenessScore(content, scope) {\n  let score = 0.5; // Base score\n  const wordCount = content.split(/\\s+/).length;\n  if (wordCount > 500) score += 0.2;\n  if (wordCount > 1000) score += 0.2;\n  if (scope === 'comprehensive' && wordCount > 1500) score += 0.1;\n  return Math.min(score, 1.0);\n}\n\nconst structureScore = calculateStructureScore(content);\nconst completenessScore = calculateCompletenessScore(content, $json.research_scope);\n\n// Clean and format\nconst cleanedContent = content\n  .replace(/^```markdown\\n/, '')\n  .replace(/\\n```$/, '')\n  .trim();\n\nreturn [{\n  json: {\n    ...items[0].json,\n    parsed_content: cleanedContent,\n    word_count: cleanedContent.split(/\\s+/).length,\n    has_structure: hasProperStructure,\n    has_toc: hasTableOfContents,\n    structure_score: structureScore,\n    completeness_score: completenessScore,\n    validation_passed: structureScore > 0.8 && completenessScore > 0.7,\n    ai_agent_used: true,\n    research_enhanced: content.length > ($json.markdown_document || '').length * 1.2\n  }\n}];"
+      },
+      "id": "parse-initial-output",
+      "name": "Parse Initial Output",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2440, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.validation_passed}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "validation-check",
+      "name": "Validation Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "operation": "edit",
+        "owner": "={{$json.github_owner}}",
+        "repository": "={{$json.github_repo}}",
+        "filePath": "docs/{{$json.project_name}}.md",
+        "fileContent": "={{$json.parsed_content}}",
+        "commitMessage": "AI Agent Enhancement: {{$json.word_count}} words, Quality: {{Math.round($json.structure_score * 100)}}%, Research: {{$json.research_enhanced ? 'Yes' : 'No'}}"
+      },
+      "id": "github-update-initial",
+      "name": "GitHub Update - Initial",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [1780, 200],
+      "credentials": {
+        "githubApi": {
+          "id": "github-credentials",
+          "name": "GitHub API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Store conversation mapping for Telegram lookup\n// In a real implementation, this would store to a database\n// For demo purposes, we'll use workflow memory\n\n// Store conversation mapping\nconst conversationData = {\n  conversation_id: $json.conversation_id,\n  project_name: $json.project_name,\n  github_owner: $json.github_owner,\n  github_repo: $json.github_repo,\n  research_scope: $json.research_scope,\n  created_at: $json.created_at,\n  workflow_state: 'active'\n};\n\n// In production, store this in Redis, database, or n8n's built-in storage\n// For now, we'll pass it through the workflow\n\nreturn [{\n  json: {\n    ...items[0].json,\n    conversation_stored: true,\n    ready_for_telegram: true\n  }\n}];"
+      },
+      "id": "store-conversation-state",
+      "name": "Store Conversation State",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2000, 200]
+    },
+    {
+      "parameters": {
+        "updates": ["message"]
+      },
+      "id": "telegram-trigger",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1,
+      "position": [240, 600],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-credentials",
+          "name": "Telegram Bot API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Conversation lookup and validation\nconst chatId = $json.message.chat.id;\nconst telegramMessage = $json.message.text;\n\n// In a real implementation, this would query a database\n// For demo purposes, we'll simulate a lookup\n// You would implement actual storage/retrieval here\n\n// Simulated conversation data (replace with actual database lookup)\nconst conversationData = {\n  conversation_id: 'demo-conversation-' + chatId,\n  project_name: 'demo-project',\n  github_owner: 'your-username',\n  github_repo: 'documents',\n  research_scope: 'comprehensive',\n  workflow_state: 'active'\n};\n\n// Error handling for unknown conversations\nif (!conversationData.project_name) {\n  return [{\n    json: {\n      error: 'conversation_not_found',\n      chat_id: chatId,\n      telegram_message: telegramMessage,\n      error_message: 'No active conversation found. Please start with form submission.'\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ...conversationData,\n    chat_id: chatId,\n    telegram_message: telegramMessage,\n    lookup_successful: true\n  }\n}];"
+      },
+      "id": "conversation-lookup",
+      "name": "Conversation Lookup",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [460, 600]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "owner": "={{$json.github_owner}}",
+        "repository": "={{$json.github_repo}}",
+        "filePath": "docs/{{$json.project_name}}.md"
+      },
+      "id": "github-read-current",
+      "name": "GitHub Read Current",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [680, 600],
+      "credentials": {
+        "githubApi": {
+          "id": "github-credentials",
+          "name": "GitHub API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionId": "={{$json.conversation_id}}",
+        "text": "=You are continuing a collaborative document editing and research session.\n\nCONTEXT:\n- This is an ongoing conversation about improving an existing document\n- Apply the operator's latest request while maintaining document integrity\n- Preserve existing structure unless specifically asked to change it\n- Ensure consistency with previous edits\n\nDocument Title: {{$json.project_name}}\nCurrent Document:\n---\n{{$json.data}}\n---\nLatest Request:\n{{$json.telegram_message}}\n\nDELIVERABLE:\nReturn the complete updated markdown document incorporating the requested changes. Maintain:\n1. Existing structure and formatting standards\n2. Professional tone and accessibility\n3. Logical organization\n4. Proper markdown formatting\n\nReturn ONLY the complete updated markdown document.",
+        "options": {}
+      },
+      "id": "ai-agent-ongoing",
+      "name": "AI Agent - Ongoing Chat",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [900, 600]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Enhanced output parser for ongoing edits with AI Agent\nconst content = $json.output || $json.text || '';\n\n// Same validation as initial parser\nconst lines = content.split('\\n');\nconst hasHeadings = lines.some(line => /^#+\\s/.test(line.trim()));\nconst hasProperStructure = content.includes('# ') || content.includes('## ');\n\n// Calculate quality scores (simplified for demo)\nfunction calculateStructureScore(content) {\n  let score = 0;\n  if (hasHeadings) score += 0.3;\n  if (hasProperStructure) score += 0.3;\n  if (content.includes('## Table of Contents')) score += 0.2;\n  if (content.includes('##')) score += 0.2;\n  return Math.min(score, 1.0);\n}\n\nfunction calculateCompletenessScore(content, scope) {\n  let score = 0.5;\n  const wordCount = content.split(/\\s+/).length;\n  if (wordCount > 500) score += 0.2;\n  if (wordCount > 1000) score += 0.2;\n  if (scope === 'comprehensive' && wordCount > 1500) score += 0.1;\n  return Math.min(score, 1.0);\n}\n\nconst structureScore = calculateStructureScore(content);\nconst completenessScore = calculateCompletenessScore(content, $json.research_scope);\n\n// Clean content\nconst cleanedContent = content\n  .replace(/^```markdown\\n/, '')\n  .replace(/\\n```$/, '')\n  .trim();\n\n// Track changes\nconst wordCount = cleanedContent.split(/\\s+/).length;\nconst changeDescription = `Ongoing edit via Telegram: ${($json.telegram_message || '').substring(0, 50)}...`;\n\nreturn [{\n  json: {\n    ...items[0].json,\n    parsed_content: cleanedContent,\n    word_count: wordCount,\n    has_structure: hasProperStructure,\n    structure_score: structureScore,\n    completeness_score: completenessScore,\n    change_description: changeDescription,\n    validation_passed: structureScore > 0.7, // Slightly lower threshold for edits\n    ai_agent_used: true,\n    research_enhanced: content.length > ($json.data || '').length * 1.1,\n    edit_type: 'telegram_chat'\n  }\n}];"
+      },
+      "id": "parse-ongoing-output",
+      "name": "Parse Ongoing Output",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1120, 600]
+    },
+    {
+      "parameters": {
+        "operation": "edit",
+        "owner": "={{$json.github_owner}}",
+        "repository": "={{$json.github_repo}}",
+        "filePath": "docs/{{$json.project_name}}.md",
+        "fileContent": "={{$json.parsed_content}}",
+        "commitMessage": "AI Agent: {{$json.change_description}} - {{$json.word_count}} words, Quality: {{Math.round($json.structure_score * 100)}}%"
+      },
+      "id": "github-update-ongoing",
+      "name": "GitHub Update - Ongoing",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [1560, 600],
+      "credentials": {
+        "githubApi": {
+          "id": "github-credentials",
+          "name": "GitHub API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{$json.chat_id}}",
+        "text": "⚠️ Document validation failed. Structure score: {{Math.round($json.structure_score * 100)}}%, Completeness: {{Math.round($json.completeness_score * 100)}}%. Please review and try again."
+      },
+      "id": "error-notification",
+      "name": "Error Notification",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [1780, 400],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-credentials",
+          "name": "Telegram Bot API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{$json.chat_id}}",
+        "text": "✅ Document updated successfully! {{$json.word_count}} words, Quality: {{Math.round($json.structure_score * 100)}}%. AI Agent: {{$json.ai_agent_used ? 'Yes' : 'No'}}, Research enhanced: {{$json.research_enhanced ? 'Yes' : 'No'}}"
+      },
+      "id": "success-notification",
+      "name": "Success Notification",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [1780, 600],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-credentials",
+          "name": "Telegram Bot API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Document Editor Form": {
+      "main": [
+        [
+          {
+            "node": "Generate Conversation ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Conversation ID": {
+      "main": [
+        [
+          {
+            "node": "GitHub Create File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub Create File": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Initial Enhancement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory Buffer Window": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent - Initial Enhancement",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "AI Agent - Research (Context7 Tools)",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "AI Agent - Reviewer",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "AI Agent - Editor Merge",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "AI Agent - Ongoing Chat",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Initial Enhancement": {
+      "main": [
+        [
+          {
+            "node": "Build Retrieval Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Retrieval Query": {
+      "main": [
+        [
+          {
+            "node": "Embed Retrieval Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embed Retrieval Query": {
+      "main": [
+        [
+          {
+            "node": "Postgres Similarity Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Similarity Search": {
+      "main": [
+        [
+          {
+            "node": "Format Retrieved Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Retrieved Context": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Research (Context7 Tools)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Research (Context7 Tools)": {
+      "main": [
+        [
+          {
+            "node": "Parse Research Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Research Output": {
+      "main": [
+        [
+          {
+            "node": "Context7 MCP - Document Analyzer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Context7 MCP - Document Analyzer": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Reviewer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Reviewer": {
+      "main": [
+        [
+          {
+            "node": "Parse Review Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Review Output": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Editor Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Editor Merge": {
+      "main": [
+        [
+          {
+            "node": "Parse Initial Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Initial Output": {
+      "main": [
+        [
+          {
+            "node": "Validation Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation Check": {
+      "main": [
+        [
+          {
+            "node": "GitHub Update - Initial",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub Update - Initial": {
+      "main": [
+        [
+          {
+            "node": "Store Conversation State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Conversation Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Lookup": {
+      "main": [
+        [
+          {
+            "node": "GitHub Read Current",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub Read Current": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Ongoing Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Ongoing Chat": {
+      "main": [
+        [
+          {
+            "node": "Parse Ongoing Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Ongoing Output": {
+      "main": [
+        [
+          {
+            "node": "GitHub Update - Ongoing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub Update - Ongoing": {
+      "main": [
+        [
+          {
+            "node": "Success Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "id": "llm-workflow",
+      "name": "LLM Document Workflow"
+    }
+  ],
+  "triggerCount": 2,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}

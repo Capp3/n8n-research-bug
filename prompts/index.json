@@ -1,0 +1,16 @@
+[
+  {
+    "id": "form-initial",
+    "name": "Form: Initial Enhancement",
+    "path": "prompts/form/initial.md",
+    "description": "Initial tone for form submissions",
+    "tags": ["form", "initial"]
+  },
+  {
+    "id": "telegram-ongoing",
+    "name": "Telegram: Ongoing Editing",
+    "path": "prompts/telegram/ongoing.md",
+    "description": "Ongoing chat editing prompt",
+    "tags": ["telegram", "ongoing"]
+  }
+]

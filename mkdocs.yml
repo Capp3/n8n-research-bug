@@ -1,0 +1,23 @@
+site_name: Vibe Dev Template
+site_description: Development template documentation
+site_author: Developer
+
+# Configuration
+theme:
+  name: readthedocs
+
+# Plugins
+plugins:
+  - search
+
+# Markdown extensions
+markdown_extensions:
+  - codehilite
+  - toc:
+      permalink: true
+
+# Page tree
+nav:
+  - Home: index.md
+  - Prompts:
+    - prompts/index.md
