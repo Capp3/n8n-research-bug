@@ -6,6 +6,10 @@ const cache = require('memory-cache');
 jest.mock('axios');
 jest.mock('memory-cache');
 
+// Set environment variables for testing
+process.env.PROMPTS_INDEX_URL = 'http://localhost:3000/test-prompts/index.json';
+process.env.PROMPTS_BASE_RAW = 'http://localhost:3000/test-prompts/';
+
 // Import server after mocking dependencies
 const app = require('../server');
 
@@ -70,7 +74,7 @@ describe('Prompt Server API', () => {
   describe('GET /api/prompts/:id', () => {
     it('should return a specific prompt with parsed frontmatter', async () => {
       const mockPrompts = [
-        { id: 'form-initial', name: 'Form: Initial', path: 'path/to/form.md', agent: 'editor' }
+        { id: 'form-initial', name: 'Form: Initial', path: 'form/initial.md', agent: 'editor' }
       ];
 
       const mockPromptContent = `---
@@ -81,8 +85,15 @@ agent: editor
 
 This is the template content.`;
 
-      axios.get.mockResolvedValueOnce({ data: mockPrompts });
-      axios.get.mockResolvedValueOnce({ data: mockPromptContent });
+      // Mock the prompts index fetch
+      axios.get.mockImplementation((url) => {
+        if (url.includes('test-prompts/index.json')) {
+          return Promise.resolve({ data: mockPrompts });
+        } else if (url.includes('test-prompts/form/initial.md')) {
+          return Promise.resolve({ data: mockPromptContent });
+        }
+        return Promise.reject(new Error('Unexpected URL: ' + url));
+      });
 
       const response = await request(app).get('/api/prompts/form-initial');
       expect(response.status).toBe(200);

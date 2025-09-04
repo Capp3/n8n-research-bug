@@ -51,6 +51,7 @@ jobs:
 
       - name: Build with MkDocs
         run: |
+          source .venv/bin/activate
           mkdocs build --clean --strict
           echo "MkDocs build completed successfully"
 
@@ -89,6 +90,7 @@ jobs:
 
       - name: Test MkDocs build
         run: |
+          source .venv/bin/activate
           mkdocs build --clean --strict
           echo "MkDocs build test passed"
 
@@ -115,6 +117,7 @@ jobs:
       - name: Check for broken links
         run: |
           # Install link checker
+          source .venv/bin/activate
           uv pip install linkchecker
 
           # Build site first

@@ -379,9 +379,14 @@ app.get('/api/config', (req, res) => {
   });
 });
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Prompt server running on port ${port}`);
-  console.log(`Using prompts index: ${PROMPTS_INDEX_URL}`);
-  console.log(`System prompt mode: ${SYSTEM_PROMPT_MODE}`);
-});
+// Export app for testing
+module.exports = app;
+
+// Start the server only if this file is run directly
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Prompt server running on port ${port}`);
+    console.log(`Using prompts index: ${PROMPTS_INDEX_URL}`);
+    console.log(`System prompt mode: ${SYSTEM_PROMPT_MODE}`);
+  });
+}

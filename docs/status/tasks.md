@@ -7,7 +7,22 @@
 - [ ] Align Memory Bank docs with `docs/projectbrief.md`
 
 ## Recently Completed
-- [x] **IMPLEMENT MODE**: GitHub Actions UV Integration, Theme Fix, Deprecated Actions Update, Virtual Environment Fix, and NPM CI Fix - 2025-01-27
+- [x] **IMPLEMENT MODE**: Dependabot Configuration Setup with UV Support - 2025-01-27
+  - Status: COMPLETED
+  - Created comprehensive `.github/dependabot.yml` configuration
+  - Configured automatic dependency updates for:
+    - Python dependencies using UV package manager (MkDocs, UV, etc.) - weekly updates
+    - Node.js dependencies (prompt-server) - weekly updates  
+    - GitHub Actions dependencies - weekly updates
+    - Docker dependencies - weekly updates
+  - Updated Python ecosystem to use "uv" instead of "pip" (project convention)
+  - Set up proper labeling, reviewers, and commit message formatting
+  - All updates scheduled for Monday mornings at 9:00 AM
+  - Configured appropriate pull request limits per ecosystem
+  - Added "uv" label for Python dependency updates
+
+## Recently Completed
+- [x] **IMPLEMENT MODE**: GitHub Actions UV Integration, Theme Fix, Deprecated Actions Update, Virtual Environment Fix, NPM CI Fix, Virtual Environment Activation Fix, and Express App Export Fix - 2025-01-27
   - Status: COMPLETED
   - Fixed GitHub Actions workflows checking for non-existent `docs/support` directory
   - Updated all workflows to use UV instead of pip (project convention)
@@ -18,12 +33,15 @@
     - `actions/deploy-pages@v2` → `@v4`
   - Fixed UV virtual environment issue by using `uv venv` to create virtual environments
   - Fixed NPM CI issue by changing `npm ci` to `npm install` (no package-lock.json exists)
-  - Updated `.github/workflows/docs.yml` to use `uv venv` and `uv pip install` and check actual directories
+  - Fixed virtual environment activation by adding `source .venv/bin/activate` before mkdocs commands
+  - Fixed Express app export issue by adding `module.exports = app` for testing
+  - Updated `.github/workflows/docs.yml` to use `uv venv`, `uv pip install`, activate venv, and check actual directories
   - Updated `.github/workflows/code-quality.yml` to use `uv venv` and `uv pip install` and check actual directories
-  - Updated `.github/workflows/test.yml` to use `uv venv` and `uv pip install` and npm install
-  - Updated `.github/workflows/scheduled-test.yml` to use `uv venv` and `uv pip install` and npm install
+  - Updated `.github/workflows/test.yml` to use `uv venv`, `uv pip install`, activate venv, and npm install
+  - Updated `.github/workflows/scheduled-test.yml` to use `uv venv`, `uv pip install`, activate venv, and npm install
   - Updated `docs/contributing/index.md` to reference correct directory structure
-  - All workflows now use UV with virtual environments, npm install, latest action versions, and validate against actual project structure
+  - All workflows now use UV with activated virtual environments, npm install, latest action versions, and validate against actual project structure
+  - Express app now properly exports for testing (resolves "app.address is not a function" error)
 - [x] **IMPLEMENT MODE**: Documentation Refactor - 2025-09-04
   - Status: COMPLETED
   - Streamlined documentation structure for practical use
