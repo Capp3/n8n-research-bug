@@ -5,9 +5,14 @@ const morgan = require('morgan');
 const axios = require('axios');
 const cache = require('memory-cache');
 const yaml = require('js-yaml');
+const { testConnection, initializeSchema } = require('./database/connection');
+const ChatMemoryService = require('./services/ChatMemoryService');
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Initialize chat memory service
+const chatMemoryService = new ChatMemoryService();
 
 // Middleware
 app.use(cors());
@@ -379,14 +384,242 @@ app.get('/api/config', (req, res) => {
   });
 });
 
+// Chat Memory API Endpoints
+
+/**
+ * POST /api/chat-memories
+ * Store a new chat memory
+ */
+app.post('/api/chat-memories', async (req, res) => {
+  try {
+    const memory = await chatMemoryService.storeMemory(req.body);
+    res.status(201).json(memory);
+  } catch (error) {
+    console.error('Error storing chat memory:', error);
+    res.status(400).json({
+      error: 'Failed to store chat memory',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/chat-memories/:conversationId
+ * Get conversation history
+ */
+app.get('/api/chat-memories/:conversationId', async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const options = {
+      limit: parseInt(req.query.limit) || 100,
+      offset: parseInt(req.query.offset) || 0,
+      agentType: req.query.agent_type
+    };
+
+    const memories = await chatMemoryService.getConversationHistory(conversationId, options);
+    res.status(200).json(memories);
+  } catch (error) {
+    console.error('Error getting conversation history:', error);
+    res.status(500).json({
+      error: 'Failed to get conversation history',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/chat-memories/:conversationId/context/:agentType
+ * Get recent conversation context for an agent
+ */
+app.get('/api/chat-memories/:conversationId/context/:agentType', async (req, res) => {
+  try {
+    const { conversationId, agentType } = req.params;
+    const contextLength = parseInt(req.query.context_length) || 10;
+
+    const context = await chatMemoryService.getRecentContext(conversationId, agentType, contextLength);
+    res.status(200).json(context);
+  } catch (error) {
+    console.error('Error getting conversation context:', error);
+    res.status(500).json({
+      error: 'Failed to get conversation context',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * PUT /api/chat-memories/:id
+ * Update a chat memory
+ */
+app.put('/api/chat-memories/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const memory = await chatMemoryService.updateMemory(id, req.body);
+    res.status(200).json(memory);
+  } catch (error) {
+    console.error('Error updating chat memory:', error);
+    res.status(400).json({
+      error: 'Failed to update chat memory',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * DELETE /api/chat-memories/:id
+ * Delete a chat memory
+ */
+app.delete('/api/chat-memories/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const success = await chatMemoryService.deleteMemory(id);
+
+    if (success) {
+      res.status(204).send();
+    } else {
+      res.status(404).json({
+        error: 'Memory not found'
+      });
+    }
+  } catch (error) {
+    console.error('Error deleting chat memory:', error);
+    res.status(500).json({
+      error: 'Failed to delete chat memory',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/conversations
+ * Get user conversations
+ */
+app.get('/api/conversations', async (req, res) => {
+  try {
+    const { user_id } = req.query;
+    if (!user_id) {
+      return res.status(400).json({
+        error: 'user_id query parameter is required'
+      });
+    }
+
+    const options = {
+      limit: parseInt(req.query.limit) || 50,
+      offset: parseInt(req.query.offset) || 0
+    };
+
+    const conversations = await chatMemoryService.getUserConversations(user_id, options);
+    res.status(200).json(conversations);
+  } catch (error) {
+    console.error('Error getting user conversations:', error);
+    res.status(500).json({
+      error: 'Failed to get user conversations',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/conversations/:conversationId/summarize
+ * Create or update conversation summary
+ */
+app.post('/api/conversations/:conversationId/summarize', async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const { summary, message_count } = req.body;
+
+    if (!summary) {
+      return res.status(400).json({
+        error: 'summary is required'
+      });
+    }
+
+    const summaryData = await chatMemoryService.createOrUpdateSummary(
+      conversationId,
+      summary,
+      message_count || 0
+    );
+
+    res.status(200).json(summaryData);
+  } catch (error) {
+    console.error('Error creating conversation summary:', error);
+    res.status(500).json({
+      error: 'Failed to create conversation summary',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/conversations/:conversationId/stats
+ * Get conversation statistics
+ */
+app.get('/api/conversations/:conversationId/stats', async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const stats = await chatMemoryService.getConversationStats(conversationId);
+    res.status(200).json(stats);
+  } catch (error) {
+    console.error('Error getting conversation stats:', error);
+    res.status(500).json({
+      error: 'Failed to get conversation stats',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/cleanup
+ * Clean up old chat memories
+ */
+app.post('/api/cleanup', async (req, res) => {
+  try {
+    const { days_old } = req.body;
+    const deletedCount = await chatMemoryService.cleanupOldMemories(days_old);
+
+    res.status(200).json({
+      message: `Cleaned up ${deletedCount} old chat memories`,
+      deleted_count: deletedCount
+    });
+  } catch (error) {
+    console.error('Error cleaning up old memories:', error);
+    res.status(500).json({
+      error: 'Failed to clean up old memories',
+      message: error.message
+    });
+  }
+});
+
 // Export app for testing
 module.exports = app;
 
 // Start the server only if this file is run directly
 if (require.main === module) {
-  app.listen(port, () => {
-    console.log(`Prompt server running on port ${port}`);
-    console.log(`Using prompts index: ${PROMPTS_INDEX_URL}`);
-    console.log(`System prompt mode: ${SYSTEM_PROMPT_MODE}`);
-  });
+  // Initialize database connection and start server
+  async function startServer() {
+    try {
+      // Test database connection
+      const dbConnected = await testConnection();
+      if (!dbConnected) {
+        console.error('Failed to connect to database. Server will start with limited functionality.');
+      } else {
+        // Initialize database schema
+        await initializeSchema();
+        console.log('Database initialized successfully');
+      }
+
+      // Start the server
+      app.listen(port, () => {
+        console.log(`Prompt server running on port ${port}`);
+        console.log(`Using prompts index: ${PROMPTS_INDEX_URL}`);
+        console.log(`System prompt mode: ${SYSTEM_PROMPT_MODE}`);
+        console.log(`Chat memory: ${dbConnected ? 'PostgreSQL enabled' : 'Memory cache only'}`);
+      });
+    } catch (error) {
+      console.error('Failed to start server:', error);
+      process.exit(1);
+    }
+  }
+
+  startServer();
 }

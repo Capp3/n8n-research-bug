@@ -33,6 +33,27 @@ This project implements a comprehensive document processing pipeline that combin
 - Telegram bot (for ongoing collaboration)
 - Context7 MCP endpoint (optional, for content validation)
 
+### Environment Setup
+
+1. **Copy the sample environment file:**
+   ```bash
+   cp sample.env .env
+   ```
+
+2. **Start the services:**
+   ```bash
+   docker compose up -d
+   ```
+
+3. **Start the prompt server:**
+   ```bash
+   cd prompt-server
+   npm install
+   npm start
+   ```
+
+See [ENVIRONMENT_SETUP.md](ENVIRONMENT_SETUP.md) for detailed configuration instructions.
+
 ### Development Commands
 
 The project includes a comprehensive Makefile with commands for all development tasks:

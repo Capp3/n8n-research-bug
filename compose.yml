@@ -1,12 +1,32 @@
+# n8n Research Bug - Support Services
+# Provides PostgreSQL with pgvector, Redis, and Adminer for the prompt-server
+#
+# Quick Start:
+#   1. Copy sample.env to .env: cp sample.env .env
+#   2. Start services: docker compose up -d
+#   3. Check status: docker compose ps
+#   4. View logs: docker compose logs [service-name]
+#
+# Services:
+#   - PostgreSQL: localhost:5432 (main database + chat memory)
+#   - Redis: localhost:6379 (cache + sessions)
+#   - Adminer: localhost:8080 (database management UI)
+#   - n8n-MCP: localhost:3001 (AI-powered n8n workflow builder - commented out)
+#
+# Environment variables in .env file control ports and credentials
 name: researchbug-support
-version: 0.0.1
+
+# Network for service communication
 networks:
   support_network:
     driver: bridge
+
+# Persistent data volumes
 volumes:
-  n8n-redis:
-  n8n-postgres:
+  n8n-redis:      # Redis data persistence
+  n8n-postgres:   # PostgreSQL data persistence
 services:
+  # Redis - Cache and session storage
   n8n-redis:
     container_name: n8n-redis
     image: redis:bookworm
@@ -14,9 +34,9 @@ services:
       - support_network
     restart: unless-stopped
     ports:
-      - ${SUPPORT_REDIS_PORT:-6379}:6379
+      - ${SUPPORT_REDIS_PORT:-6379}:6379  # Default: localhost:6379
     volumes:
-      - n8n-redis:/data
+      - n8n-redis:/data  # Persistent cache data
     deploy:
       resources:
         limits:
@@ -31,14 +51,16 @@ services:
       start_period: 20s
       test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
       timeout: 3s
+
+  # PostgreSQL with pgvector extension - Vector database for semantic search
   n8n-pgvector:
     container_name: n8n-pgvector
     image: pgvector/pgvector:pg17-bookworm
     volumes:
-      - n8n-postgres:/var/lib/postgresql/data
+      - n8n-postgres:/var/lib/postgresql/data  # Shared data with main PostgreSQL
     depends_on:
       n8n-postgres:
-        condition: service_healthy
+        condition: service_healthy  # Wait for main PostgreSQL to be ready
     environment:
       POSTGRES_PASSWORD: ${SUPPORT_POSTGRES_PASSWORD:-support-password}
       POSTGRES_USER: ${SUPPORT_POSTGRES_USER:-support-user}
@@ -60,13 +82,15 @@ services:
       start_period: 20s
       test: ["CMD-SHELL", "pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}"]
       timeout: 5s
+
+  # Main PostgreSQL database - Chat memory and application data
   n8n-postgres:
     image: postgres:17-bookworm
     restart: unless-stopped
     container_name: n8n-postgres
-    shm_size: 128mb
+    shm_size: 128mb  # Shared memory for PostgreSQL performance
     volumes:
-      - n8n-postgres:/var/lib/postgresql/data
+      - n8n-postgres:/var/lib/postgresql/data  # Persistent database storage
     environment:
       POSTGRES_PASSWORD: ${SUPPORT_POSTGRES_PASSWORD:-support-password}
       POSTGRES_USER: ${SUPPORT_POSTGRES_USER:-support-user}
@@ -74,7 +98,7 @@ services:
     networks:
       - support_network
     ports:
-      - ${SUPPORT_POSTGRES_PORT:-5432}:5432
+      - ${SUPPORT_POSTGRES_PORT:-5432}:5432  # Default: localhost:5432
     deploy:
       resources:
         limits:
@@ -89,17 +113,19 @@ services:
       start_period: 20s
       test: ["CMD-SHELL", "pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}"]
       timeout: 5s
+
+  # Adminer - Web-based database management interface
   adminer:
     image: adminer
     restart: unless-stopped
     container_name: n8n-adminer
     depends_on:
       n8n-postgres:
-        condition: service_healthy
+        condition: service_healthy  # Wait for PostgreSQL to be ready
     networks:
       - support_network
     ports:
-      - ${SUPPORT_ADMINER_PORT:-8080}:8080
+      - ${SUPPORT_ADMINER_PORT:-8080}:8080  # Default: localhost:8080
     deploy:
       resources:
         limits:
@@ -114,3 +140,47 @@ services:
       start_period: 20s
       test: ["CMD-SHELL", "curl -f http://localhost:8080 || exit 1"]
       timeout: 5s
+
+  # n8n-MCP Server - AI-powered n8n workflow builder
+  # n8n-mcp:
+  #   image: ghcr.io/czlonkowski/n8n-mcp:latest
+  #   restart: unless-stopped
+  #   container_name: n8n-mcp
+  #   depends_on:
+  #     n8n-postgres:
+  #       condition: service_healthy  # Wait for PostgreSQL to be ready
+  #   networks:
+  #     - support_network
+  #   ports:
+  #     - ${N8N_MCP_PORT:-3001}:3001  # Default: localhost:3001
+  #   environment:
+  #     # Database connection
+  #     DATABASE_URL: postgresql://${SUPPORT_POSTGRES_USER:-support-user}:${SUPPORT_POSTGRES_PASSWORD:-support-password}@n8n-postgres:5432/${SUPPORT_POSTGRES_DB:-support}
+  #     # MCP Server configuration
+  #     MCP_SERVER_PORT: ${N8N_MCP_PORT:-3001}
+  #     MCP_SERVER_HOST: ${N8N_MCP_HOST:-0.0.0.0}
+  #     # n8n API configuration
+  #     N8N_API_URL: ${N8N_API_URL:-http://n8n:5678}
+  #     N8N_API_KEY: ${N8N_API_KEY}
+  #     # Optional: n8n docs path for enhanced node information
+  #     N8N_DOCS_PATH: ${N8N_DOCS_PATH:-/app/n8n-docs}
+  #     # Logging and debug
+  #     LOG_LEVEL: ${N8N_MCP_LOG_LEVEL:-info}
+  #     DEBUG: ${N8N_MCP_DEBUG:-false}
+  #   volumes:
+  #     # Optional: Mount n8n docs for enhanced functionality
+  #     - ${N8N_DOCS_PATH:-./n8n-docs}:/app/n8n-docs:ro
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: "1.0"
+  #         memory: 1G
+  #       reservations:
+  #         cpus: "0.5"
+  #         memory: 512M
+  #   healthcheck:
+  #     interval: 30s
+  #     retries: 5
+  #     start_period: 30s
+  #     test: ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
+  #     timeout: 10s

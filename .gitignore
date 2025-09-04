@@ -408,3 +408,5 @@ scratch.md
 # docs/archive/
 
 site/
+
+.env

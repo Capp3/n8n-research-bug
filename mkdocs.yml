@@ -44,6 +44,10 @@ nav:
     - implementation/credentials-guide.md
     - implementation/workflow-analysis.md
     - implementation/configuration.md
+    - implementation/environment-setup.md
+    - implementation/chat-memory.md
+    - implementation/chat-memory-api.md
+    - implementation/n8n-mcp-integration.md
     - implementation/testing.md
     - implementation/troubleshooting.md
   - Creative:
@@ -70,5 +74,6 @@ nav:
     - status/project-status.md
     - status/tasks.md
     - status/build-summary-credentials.md
+    - status/postgresql-chat-memory-implementation-summary.md
   - Archive:
     - archive/index.md
