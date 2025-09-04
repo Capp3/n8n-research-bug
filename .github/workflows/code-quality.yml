@@ -18,9 +18,10 @@ jobs:
         with:
           version: 'latest'
 
-      - name: Install dependencies
+      - name: Create virtual environment and install dependencies
         run: |
-          uv pip install --system PyYAML
+          uv venv
+          uv pip install PyYAML
 
       - name: Validate YAML files
         run: |

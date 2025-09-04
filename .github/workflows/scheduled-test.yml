@@ -47,6 +47,7 @@ jobs:
 
       - name: Test documentation
         run: |
-          uv pip install --system -r scripts/requirements.txt
+          uv venv
+          uv pip install -r scripts/requirements.txt
           mkdocs build --clean --strict
           echo "✅ Documentation build successful"

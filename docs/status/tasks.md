@@ -7,7 +7,7 @@
 - [ ] Align Memory Bank docs with `docs/projectbrief.md`
 
 ## Recently Completed
-- [x] **IMPLEMENT MODE**: GitHub Actions UV Integration, Theme Fix, Deprecated Actions Update, System Install Fix, and NPM CI Fix - 2025-01-27
+- [x] **IMPLEMENT MODE**: GitHub Actions UV Integration, Theme Fix, Deprecated Actions Update, Virtual Environment Fix, and NPM CI Fix - 2025-01-27
   - Status: COMPLETED
   - Fixed GitHub Actions workflows checking for non-existent `docs/support` directory
   - Updated all workflows to use UV instead of pip (project convention)
@@ -16,14 +16,14 @@
   - Updated deprecated GitHub Actions to latest versions:
     - `actions/upload-pages-artifact@v2` → `@v3`
     - `actions/deploy-pages@v2` → `@v4`
-  - Fixed UV virtual environment issue by adding `--system` flag to all `uv pip install` commands
+  - Fixed UV virtual environment issue by using `uv venv` to create virtual environments
   - Fixed NPM CI issue by changing `npm ci` to `npm install` (no package-lock.json exists)
-  - Updated `.github/workflows/docs.yml` to use UV with --system flag and check actual directories
-  - Updated `.github/workflows/code-quality.yml` to use UV with --system flag and check actual directories
-  - Updated `.github/workflows/test.yml` to use UV with --system flag and npm install
-  - Updated `.github/workflows/scheduled-test.yml` to use UV with --system flag and npm install
+  - Updated `.github/workflows/docs.yml` to use `uv venv` and `uv pip install` and check actual directories
+  - Updated `.github/workflows/code-quality.yml` to use `uv venv` and `uv pip install` and check actual directories
+  - Updated `.github/workflows/test.yml` to use `uv venv` and `uv pip install` and npm install
+  - Updated `.github/workflows/scheduled-test.yml` to use `uv venv` and `uv pip install` and npm install
   - Updated `docs/contributing/index.md` to reference correct directory structure
-  - All workflows now use UV with --system flag, npm install, latest action versions, and validate against actual project structure
+  - All workflows now use UV with virtual environments, npm install, latest action versions, and validate against actual project structure
 - [x] **IMPLEMENT MODE**: Documentation Refactor - 2025-09-04
   - Status: COMPLETED
   - Streamlined documentation structure for practical use

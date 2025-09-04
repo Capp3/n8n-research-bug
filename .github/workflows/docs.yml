@@ -41,9 +41,10 @@ jobs:
         with:
           version: 'latest'
 
-      - name: Install dependencies
+      - name: Create virtual environment and install dependencies
         run: |
-          uv pip install --system -r scripts/requirements.txt
+          uv venv
+          uv pip install -r scripts/requirements.txt
 
       - name: Setup Pages
         uses: actions/configure-pages@v3
@@ -81,9 +82,10 @@ jobs:
         with:
           version: 'latest'
 
-      - name: Install dependencies
+      - name: Create virtual environment and install dependencies
         run: |
-          uv pip install --system -r scripts/requirements.txt
+          uv venv
+          uv pip install -r scripts/requirements.txt
 
       - name: Test MkDocs build
         run: |
@@ -113,7 +115,7 @@ jobs:
       - name: Check for broken links
         run: |
           # Install link checker
-          uv pip install --system linkchecker
+          uv pip install linkchecker
 
           # Build site first
           mkdocs build --clean
