@@ -297,9 +297,11 @@ const testScenarios = [
 #### Adding New Documentation
 1. **Choose Appropriate Section**:
    - `docs/implementation/`: Implementation guides
-   - `docs/support/`: Support services documentation
+   - `docs/contributing/`: Contribution guidelines and processes
    - `docs/creative/`: Design decisions and architecture
    - `docs/status/`: Project status and progress
+   - `docs/archive/`: Archived documentation and historical records
+   - `docs/test-data/`: Test data and sample content
 
 2. **Follow Documentation Standards**:
    - Use clear, concise language

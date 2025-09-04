@@ -36,21 +36,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Install UV
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: '3.11'
-
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/scripts/requirements.txt') }}
-          path: ~/.cache/pip
+          version: 'latest'
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r scripts/requirements.txt
+          uv pip install -r scripts/requirements.txt
 
       - name: Setup Pages
         uses: actions/configure-pages@v3
@@ -83,15 +76,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Install UV
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: '3.11'
+          version: 'latest'
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r scripts/requirements.txt
+          uv pip install -r scripts/requirements.txt
 
       - name: Test MkDocs build
         run: |
@@ -111,16 +103,17 @@ jobs:
           test -d docs/creative
           test -d docs/prompts
           test -d docs/implementation
-          test -d docs/support
           test -d docs/contributing
           test -d docs/status
+          test -d docs/archive
+          test -d docs/test-data
 
           echo "Documentation structure validation passed"
 
       - name: Check for broken links
         run: |
           # Install link checker
-          pip install linkchecker
+          uv pip install linkchecker
 
           # Build site first
           mkdocs build --clean
