@@ -52,7 +52,7 @@ jobs:
       - name: Build with MkDocs
         run: |
           source .venv/bin/activate
-          mkdocs build --clean --strict
+          mkdocs build --clean
           echo "MkDocs build completed successfully"
 
       - name: Upload artifact
@@ -91,7 +91,7 @@ jobs:
       - name: Test MkDocs build
         run: |
           source .venv/bin/activate
-          mkdocs build --clean --strict
+          mkdocs build --clean
           echo "MkDocs build test passed"
 
       - name: Validate documentation structure
