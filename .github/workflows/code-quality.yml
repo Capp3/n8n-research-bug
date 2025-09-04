@@ -20,7 +20,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install PyYAML
+          uv pip install --system PyYAML
 
       - name: Validate YAML files
         run: |

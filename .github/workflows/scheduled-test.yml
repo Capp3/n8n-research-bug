@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd prompt-server
-          npm ci
+          npm install
 
       - name: Run tests
         run: |
@@ -47,6 +47,6 @@ jobs:
 
       - name: Test documentation
         run: |
-          uv pip install -r scripts/requirements.txt
+          uv pip install --system -r scripts/requirements.txt
           mkdocs build --clean --strict
           echo "✅ Documentation build successful"

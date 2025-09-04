@@ -43,7 +43,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install -r scripts/requirements.txt
+          uv pip install --system -r scripts/requirements.txt
 
       - name: Setup Pages
         uses: actions/configure-pages@v3
@@ -54,7 +54,7 @@ jobs:
           echo "MkDocs build completed successfully"
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ./site
 
@@ -68,7 +68,7 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
 
   test:
     runs-on: ubuntu-latest
@@ -83,7 +83,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install -r scripts/requirements.txt
+          uv pip install --system -r scripts/requirements.txt
 
       - name: Test MkDocs build
         run: |
@@ -113,7 +113,7 @@ jobs:
       - name: Check for broken links
         run: |
           # Install link checker
-          uv pip install linkchecker
+          uv pip install --system linkchecker
 
           # Build site first
           mkdocs build --clean
