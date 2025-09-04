@@ -11,7 +11,7 @@ copyright: Copyright &copy; 2025 cappy
 
 # Configuration
 theme:
-  name: cinder
+  name: readthedocs
 
 # Plugins
 plugins:
