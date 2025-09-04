@@ -1,0 +1,42 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate YAML files
+        run: |
+          echo "🔍 Validating YAML files..."
+          python -c "import yaml; yaml.safe_load(open('mkdocs.yml'))"
+          for file in .github/workflows/*.yml; do
+            echo "Validating $file"
+            python -c "import yaml; yaml.safe_load(open('$file'))"
+          done
+          echo "✅ All YAML files are valid"
+
+      - name: Check documentation structure
+        run: |
+          echo "🔍 Checking documentation structure..."
+          test -f docs/index.md
+          test -f docs/projectbrief.md
+          test -f docs/technical.md
+          test -d docs/creative
+          test -d docs/implementation
+          test -d docs/support
+          echo "✅ Documentation structure is valid"
+
+      - name: Validate prompt templates
+        run: |
+          echo "🔍 Validating prompt templates..."
+          test -f prompts/index.json
+          python -c "import json; json.load(open('prompts/index.json'))"
+          echo "✅ Prompt templates are valid"

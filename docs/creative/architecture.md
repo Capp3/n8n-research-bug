@@ -5,7 +5,7 @@
 ## Component Description
 End-to-end architecture for:
 - Runtime prompt retrieval from the public repo via HTTP GET
-- Assembly of the selected prompt with writing style into LLM input
+- Assembly of agent system prompt + agent user prompt template with optional Writing Style Instructions; include Submission Brief only on initial step
 - Diff preview generation against a target repo file
 - Safe write (create/update) to the target repo
 - Simple docs generation flow for MkDocs (GitHub Pages)
@@ -65,7 +65,7 @@ Decision: D1 now via simple script/Make target; revisit plugins later.
 1) HTTP GET index.json (public raw GitHub)
 2) Populate dropdown for prompt selection
 3) HTTP GET selected prompt `.md`
-4) Form 1 submit → build LLM request with writing style preset
+4) Form 1 submit → build LLM request including: system prompt (shared or agent-specific), user prompt template, optional Writing Style Instructions; for initial run also include Submission Brief
 5) Read target repo file (if exists) via GitHub API (using configured credentials)
 6) Generate candidate content
 7) Compute diff (jsdiff) vs existing (or mark as new file)
@@ -80,7 +80,7 @@ Decision: D1 now via simple script/Make target; revisit plugins later.
 - Form 1: Intake fields (project, doc, prompt, style, output repo/branch/path, creds flag)
 - IF: creds flag true → continue; else → error/abort
 - HTTP Request (Read File): GET `repos/:owner/:repo/contents/:path?ref=:branch` (handle 404)
-- Function (Assemble LLM Input): combine user doc + prompt + style preset
+- Function (Assemble LLM Input): combine user doc + agent system prompt + agent user prompt template + optional Writing Style Instructions; include Submission Brief on initial run only
 - LLM Node (Generate Draft): produce updated markdown
 - Function (Diff): jsdiff unified diff vs existing (or mark new)
 - Form 2: Confirmation with summary + diff preview

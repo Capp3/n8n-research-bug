@@ -13,7 +13,7 @@ Design a simple, reliable UI using vanilla n8n Forms for selecting a prompt from
 - Output target configurable (repo URL, branch, file path); GitHub credentials must be configured for writes
 - No custom prompt override (avoid unpredictable multi-agent interactions)
 - Provide a confirmation step; show a diff preview when feasible
-- Offer a “writing style” selection via presets (Brainstorm, Executive, Technical, Neutral)
+- Offer an optional “writing style instructions” textarea (freeform). Note: preset dropdowns are deferred to Future Enhancements.
 
 ## Options
 1) Single-step form
@@ -33,7 +33,7 @@ Design a simple, reliable UI using vanilla n8n Forms for selecting a prompt from
 
 ## Recommended Approach
 Adopt the two-step flow:
-- Step 1 (Intake): capture project info, input markdown, prompt selection, writing style, output target
+- Step 1 (Intake): capture project info, input markdown, LLM template selection, submission brief, optional writing style instructions, output target
 - Step 2 (Confirm): show summary + diff preview; user confirms Yes/No
 
 ## UI Field Specification
@@ -41,8 +41,9 @@ Adopt the two-step flow:
 Form 1: Project Intake
 - Project name (text, required)
 - Source document (textarea, required)
-- Prompt (dropdown; populated from `prompts/index.json` via HTTP GET)
-- Writing style (dropdown presets: Brainstorm, Executive, Technical, Neutral)
+- LLM Template (dropdown; populated from `prompts/index.json` via HTTP GET)
+- Submission Brief (textarea, required) — the purpose and goals of the project; provided to the initial prompt
+- Writing Style Instructions (textarea, optional) — tone, style, and constraints to apply at each iteration
 - Output repo URL (text; e.g., https://github.com/org/repo)
 - Output branch (text; default: main)
 - Output file path (text; default: docs/<project>.md)
@@ -62,7 +63,7 @@ Form 2: Confirm & Run
 ## Runtime Prompt Loading (UI behavior)
 - Fetch `prompts/index.json` from raw GitHub (public):
   - GET `https://raw.githubusercontent.com/Capp3/n8n-research-bug/main/prompts/index.json`
-- Populate dropdown from JSON entries: `{ id, name, path, description, tags }`
+- Populate LLM Template dropdown from JSON entries: `{ id, name, path, description, tags }`
 - On selection, fetch the associated `.md` at `path` (raw URL) to pass along to the LLM step
 
 ## Error States & User Feedback
@@ -91,9 +92,15 @@ Form 2: Confirm & Run
 
 ## Verification Checkpoint
 - Two-step flow implemented
-- Prompt dropdown populated from `index.json`
-- Writing style presets available and passed to processing
+- LLM Template dropdown populated from `index.json`
+- Submission Brief required and passed to initial prompt
+- Writing Style Instructions optional but, if provided, passed to each prompt iteration for consistency
 - Diff preview shown when target exists; new-file preview otherwise
 - Clear errors and retry paths for network/validation issues
+
+## Future Enhancements
+- Preset Writing Style dropdown (Brainstorm, Executive, Technical, Neutral) with mapping to detailed style descriptors
+- User-specific style profiles with persistence
+- Prompt set versioning surfaced in UI and used for reproducibility
 
 🎨🎨🎨 EXITING CREATIVE PHASE: UI/UX

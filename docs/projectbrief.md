@@ -6,8 +6,8 @@ This project creates an n8n workflow to:
 
 1. Accept a markdown document, project name, and personal thoughts via **n8n form**.
 2. Store the initial document in **GitHub**.
-3. Use a **specialised first-entry prompt** for the form submission to set the initial editing tone.
-4. Continue the conversation through **Telegram** with a different, ongoing editing prompt.
+3. Use a specialised pair of prompts per agent: a system prompt (shared or agent-specific) and an agent user prompt template. For the initial run, include the required Submission Brief.
+4. Continue the conversation through Telegram with the agent user prompt template; keep using the system prompt; pass Writing Style Instructions each iteration.
 5. Parse LLM responses to selectively update the document in GitHub.
 6. Maintain conversation and document state across sessions.
 
@@ -73,7 +73,7 @@ Payload example sent by the analyzer node:
 }
 ```
 
-See `n8n/workflow-setup-guide.md` for authentication options and reverse-proxy guidance.
+See `docs/implementation/setup-guide.md` for authentication options and reverse-proxy guidance.
 
 ## Multi-Agent Architecture
 
@@ -136,8 +136,9 @@ graph LR
 | `workflow_state`       | Function Node    | Current state tracking                         |
 | `chat_id`              | Telegram Trigger | Identifies Telegram user                       |
 | `system_prompt`        | Static Template  | Formatting and research standards for LLM     |
-| `llm_prompt_initial`   | Function Node    | Prompt template for first form submission     |
-| `llm_prompt_ongoing`   | Function Node    | Prompt template for subsequent Telegram chat  |
+| `agent_user_prompt`    | Function Node    | Agent user prompt template (varies by step)   |
+| `submission_brief`     | Form Input       | Required brief provided with initial document |
+| `style_instructions`   | Form Input       | Optional writing style instructions to apply  |
 | `llm_response`         | OpenRouter       | Raw LLM response with markdown content         |
 | `parsed_content`       | Parser Node      | Cleaned and validated markdown output          |
 | `word_count`           | Parser Node      | Document length tracking                       |
@@ -177,21 +178,19 @@ The AI Agent nodes are configured with professional document editing and researc
 
 ```text
 SYSTEM (Editor – Initial Enhancement):
-You are the Lead Editor. Assess, plan, and improve iteratively while preserving tone.
-Use conversation memory (session: {{ $json.conversation_id }}). Read the entire document first.
-Ask up to 3 focused clarifying questions when critical details are missing.
-Include mermaid only for simple plan visualization.
+{{ $json.system_prompt }}
 
-PROMPT:
+USER (Editor – Initial Enhancement Template):
 PROJECT: {{ $json.project_name }} | SCOPE: {{ $json.research_scope || 'comprehensive' }}
+SUBMISSION BRIEF (required):
+{{ $json.submission_brief }}
+WRITING STYLE INSTRUCTIONS (optional):
+{{ $json.style_instructions || '' }}
 
 INITIAL DOCUMENT:
 ---
 {{ $json.markdown_document }}
 ---
-
-OPERATOR THOUGHTS:
-{{ $json.personal_thoughts || '' }}
 
 RETRIEVED CONTEXT (if any):
 {{ $json.retrieved_context || '' }}
@@ -217,13 +216,13 @@ OUTPUT (markdown only):
 
 ```text
 SYSTEM (Editor – Ongoing Chat):
-You are the Editor for ongoing, focused updates. Read the entire document first.
-Preserve tone and structure. Apply small, scoped changes per request.
-Ask 1–2 clarifying questions if the request is ambiguous. Use mermaid only for brief plan visuals.
+{{ $json.system_prompt }}
 
-PROMPT:
+USER (Editor – Ongoing Template):
 PROJECT: {{ $json.project_name }}
 REQUEST: {{ $json.telegram_message }}
+WRITING STYLE INSTRUCTIONS (optional):
+{{ $json.style_instructions || '' }}
 
 CURRENT DOCUMENT (from GitHub or previous node):
 ---
@@ -242,7 +241,7 @@ Return ONLY the complete updated markdown document.
 
 ## References
 
-- Setup and full node-by-node details: `n8n/workflow-setup-guide.md`
+- Setup and full node-by-node details: `docs/implementation/setup-guide.md`
 - Workflow JSON: `n8n/llm-document-workflow.json`
 
 ## Example Project
@@ -251,7 +250,7 @@ Below is the project I want to use this with initially. This should be used to i
 
 I have created a report about flying drones for media production in Northern Irealand. This includes licenseing and insurance as well as legal and liability requirements. These have been researched for the United Kingdom. The report needs to be expanded, improved, and included further research into the Republic of Ireland.
 
-When the form is filled i will included the full text of the document, in markdown, in the form. I will also provide a project title, to help title the end document, and a prompt, below.
+When the form is filled i will included the full text of the document, in markdown, in the form. I will also provide a project title, to help title the end document, and a Submission Brief (see below).
 
 ### Project Submission Prompt
 
@@ -290,7 +289,7 @@ The updated workflow specifically addresses the complex research requirements of
 
 **Project Name**: `drone-regulations-uk-ireland-media-production`
 
-**Personal Thoughts/Research Requirements** (enhanced prompt):
+**Submission Brief** (required):
 
 ```text
 I have completed a report about flying drones in the UK, which already covers licensing, insurance, and legal/liability requirements. I need to expand this document to also cover the Republic of Ireland. Please:
@@ -373,7 +372,8 @@ Based on [Context7.com](https://context7.com/) MCP capabilities, the following s
   "fields": [
     {"name": "project_name", "type": "text", "required": true},
     {"name": "markdown_document", "type": "textarea", "required": true},
-    {"name": "personal_thoughts", "type": "textarea", "required": true},
+    {"name": "submission_brief", "type": "textarea", "required": true},
+    {"name": "style_instructions", "type": "textarea", "required": false},
     {"name": "research_scope", "type": "select", "options": ["basic", "comprehensive", "regulatory"], "default": "comprehensive"}
   ],
   "output": "json"

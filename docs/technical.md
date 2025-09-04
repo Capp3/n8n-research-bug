@@ -1,7 +1,7 @@
 # Technical Notes
 
 Key decisions:
-- Prompt discovery: public raw GitHub via `prompts/index.json` → fetch `.md` files
+- Prompt discovery: public raw GitHub via `prompts/index.json` → fetch agent user prompt template `.md` files and system prompt(s)
 - Diff preview: jsdiff unified diff rendered as markdown code block
 - Writes: GitHub Contents API (create/update) with token in n8n credentials
 - Docs: Mirror `prompts/**/*.md` into `docs/prompts/` and include in `mkdocs.yml`
@@ -26,4 +26,4 @@ Security:
 
 MkDocs:
 - Theme: readthedocs
-- Nav includes Prompts index and prompt pages
+- Nav includes LLM Templates index and template pages

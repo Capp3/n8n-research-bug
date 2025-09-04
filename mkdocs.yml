@@ -1,23 +1,69 @@
-site_name: Vibe Dev Template
-site_description: Development template documentation
-site_author: Developer
+site_name: n8n LLM Document Workflow
+site_description: Multi-agent AI workflow for document enhancement and collaboration using n8n, LangChain, and Telegram integration
+site_author: cappy
+site_url: https://capp3.github.io/n8n-research-bug/
+repo_url: https://github.com/Capp3/n8n-research-bug
+repo_name: Capp3/n8n-research-bug
+edit_uri: edit/main/docs/
+
+# Copyright notice
+copyright: Copyright &copy; 2025 cappy
 
 # Configuration
 theme:
-  name: readthedocs
+  name: cinder
 
 # Plugins
 plugins:
-  - search
+  - search:
+      lang: en
 
 # Markdown extensions
 markdown_extensions:
   - codehilite
+  - fenced_code
+  - tables
   - toc:
       permalink: true
 
 # Page tree
 nav:
   - Home: index.md
-  - Prompts:
+  - Quick Start: QUICK_START.md
+  - Project Brief: projectbrief.md
+  - Technical: technical.md
+  - System Prompts: system-prompts.md
+  - Implementation:
+    - implementation/index.md
+    - implementation/setup-guide.md
+    - implementation/credentials-guide.md
+    - implementation/workflow-analysis.md
+    - implementation/configuration.md
+    - implementation/testing.md
+    - implementation/troubleshooting.md
+  - Creative:
+    - creative/index.md
+    - creative/uiux.md
+    - creative/architecture.md
+    - creative/algorithm.md
+    - creative/decisions.md
+  - LLM Templates:
     - prompts/index.md
+    - prompts/schema.md
+  - Test Data:
+    - test-data/index.md
+    - test-data/sample-document.md
+    - test-data/submission-brief.md
+    - test-data/style-instructions.md
+    - test-data/test-log-template.md
+  - Contributing:
+    - contributing/index.md
+    - contributing/prompt-contributions.md
+    - contributing/code-contributions.md
+  - Status:
+    - status/index.md
+    - status/project-status.md
+    - status/tasks.md
+    - status/build-summary-credentials.md
+  - Archive:
+    - archive/index.md

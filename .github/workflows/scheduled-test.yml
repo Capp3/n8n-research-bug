@@ -1,0 +1,54 @@
+name: Scheduled Test
+
+on:
+  schedule:
+    # Run every day at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'prompt-server/package-lock.json'
+
+      - name: Install dependencies
+        run: |
+          cd prompt-server
+          npm ci
+
+      - name: Run tests
+        run: |
+          cd prompt-server
+          npm test
+
+      - name: Test prompt server
+        run: |
+          cd prompt-server
+          npm start &
+          sleep 5
+
+          # Test basic functionality
+          curl -f http://localhost:3000/api/health
+          curl -f http://localhost:3000/api/prompts
+
+          echo "✅ Scheduled test completed successfully"
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Test documentation
+        run: |
+          pip install -r requirements.txt
+          mkdocs build --clean --strict
+          echo "✅ Documentation build successful"

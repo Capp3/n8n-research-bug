@@ -404,3 +404,7 @@ FodyWeavers.xsd
 *.sln.iml
 
 scratch.md
+
+# docs/archive/
+
+site/
