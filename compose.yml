@@ -163,7 +163,8 @@ services:
   #     N8N_API_URL: ${N8N_API_URL:-http://n8n:5678}
   #     N8N_API_KEY: ${N8N_API_KEY}
   #     # Optional: n8n docs path for enhanced node information
-  #     N8N_DOCS_PATH: ${N8N_DOCS_PATH:-/app/n8n-docs}
+  #     N8N_DOCS_PATH: ${N8N_DOCS_PATH:-/app/n8n-docs}UV
+
   #     # Logging and debug
   #     LOG_LEVEL: ${N8N_MCP_LOG_LEVEL:-info}
   #     DEBUG: ${N8N_MCP_DEBUG:-false}
