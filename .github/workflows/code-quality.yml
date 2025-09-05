@@ -53,13 +53,12 @@ jobs:
           test -f docs/projectbrief.md
           test -f docs/technical.md
           test -f docs/system-prompts.md
-          test -d docs/creative
           test -d docs/implementation
           test -d docs/contributing
           test -d docs/status
           test -d docs/archive
           test -d docs/test-data
-          test -d docs/reflection
+          test -d docs/prompts
           echo "✅ Documentation structure is valid"
 
       - name: Validate MkDocs configuration

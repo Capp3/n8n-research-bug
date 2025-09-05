@@ -80,17 +80,14 @@ jobs:
           test -f docs/projectbrief.md
           test -f docs/technical.md
           test -f docs/system-prompts.md
-          test -f docs/mermaid-test.md
 
           # Check if all directories exist
-          test -d docs/creative
           test -d docs/prompts
           test -d docs/implementation
           test -d docs/contributing
           test -d docs/status
           test -d docs/archive
           test -d docs/test-data
-          test -d docs/reflection
 
           echo "✅ Documentation structure validation passed"
 

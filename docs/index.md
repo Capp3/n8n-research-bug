@@ -25,12 +25,10 @@ Welcome to the comprehensive documentation for the n8n LLM Document Workflow - a
 - **[System Prompts](system-prompts.md)** - AI system prompt documentation
 
 ### Development Resources
-- **[Creative Documentation](creative/)** - Design decisions and architecture
-- **[Contributing](contributing/)** - Contribution guidelines and processes
-- **[Archive](archive/)** - Completed task documentation and lessons learned
-- **[Status](status/)** - Project status and task tracking
-- **[Prompts](prompts/)** - LLM prompt templates and schema
-- **[Test Data](test-data/)** - Sample documents and test templates
+- **[Contributing](contributing/index.md)** - Contribution guidelines and processes
+- **[Status](status/index.md)** - Project status and task tracking
+- **[Prompts](prompts/index.md)** - LLM prompt templates and schema
+- **[Test Data](test-data/index.md)** - Sample documents and test templates
 
 ## 🎯 Key Features
 
@@ -86,7 +84,7 @@ Welcome to the comprehensive documentation for the n8n LLM Document Workflow - a
 
 ### For Developers
 1. Review **[Project Brief](projectbrief.md)** for project context
-2. Study **[Creative Documentation](creative/)** for design decisions
+2. Study the archived design decisions for reference
 3. Check **[Contributing](contributing/)** for development guidelines
 4. Use **[Testing](implementation/testing.md)** for validation procedures
 
@@ -94,7 +92,7 @@ Welcome to the comprehensive documentation for the n8n LLM Document Workflow - a
 1. Check **[Troubleshooting](implementation/troubleshooting.md)** for common issues
 2. Review **[Configuration](implementation/configuration.md)** for system settings
 3. Use **[Testing](implementation/testing.md)** for diagnostic procedures
-4. Check **[Archive](archive/)** for lessons learned from previous implementations
+4. Review project status and implementation history
 
 ## 🔧 System Architecture
 
