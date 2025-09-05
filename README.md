@@ -3,7 +3,6 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Documentation](https://github.com/Capp3/n8n-research-bug/workflows/Deploy%20Documentation%20to%20GitHub%20Pages/badge.svg)](https://github.com/Capp3/n8n-research-bug/actions/workflows/docs.yml)
 [![Code Quality](https://github.com/Capp3/n8n-research-bug/workflows/Code%20Quality/badge.svg)](https://github.com/Capp3/n8n-research-bug/actions/workflows/code-quality.yml)
-[![Tests](https://github.com/Capp3/n8n-research-bug/workflows/Test/badge.svg)](https://github.com/Capp3/n8n-research-bug/actions/workflows/test.yml)
 [![Scheduled Tests](https://github.com/Capp3/n8n-research-bug/workflows/Scheduled%20Test/badge.svg)](https://github.com/Capp3/n8n-research-bug/actions/workflows/scheduled-test.yml)
 
 A sophisticated multi-agent AI workflow for document enhancement, research, and ongoing collaboration using n8n, LangChain, and Telegram integration.
@@ -219,6 +218,25 @@ graph TD
     C --> C3[HTTP Request]
     C1 & C2 & C3 --> C
 ```
+
+## Future Features
+
+### Planned Integrations
+- **Slack MCP Integration**: Team communication and workflow notifications
+  - Service configuration ready in `compose.yml` (commented out)
+  - Environment variables documented in `.env`
+  - Enable by uncommenting the `mcp-slack` service section
+
+### Additional MCP Services
+- **Telegram MCP**: Personal communication integration
+- **GitHub MCP**: Enhanced repository and code analysis
+- **Docker MCP**: Container management and orchestration
+- **Notion MCP**: Alternative documentation management
+
+### Service Expansion
+- Additional research MCP servers as they become available
+- Enhanced monitoring and alerting capabilities
+- Advanced workflow automation features
 
 ## Contributing
 

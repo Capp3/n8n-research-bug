@@ -13,6 +13,12 @@
 #   - Adminer: localhost:8080 (database management UI)
 #   - Brave Search MCP: localhost:3002 (web search capabilities)
 #   - Wikipedia MCP: localhost:3003 (knowledge base access)
+#   - Firecrawl MCP: localhost:3004 (advanced web scraping)
+#   - Puppeteer MCP: localhost:3005 (browser automation)
+#   - Time MCP: localhost:3006 (time operations)
+#   - Sequential Thinking MCP: localhost:3007 (problem-solving)
+#   - NocoDB PostgreSQL: localhost:5434 (dedicated database for NocoDB)
+#   - NocoDB: localhost:8080 (database management and API)
 #   - n8n-MCP: localhost:3001 (AI-powered n8n workflow builder)
 #
 # Environment variables in .env file control ports and credentials
@@ -28,6 +34,8 @@ volumes:
   n8n-redis:      # Redis data persistence
   n8n-postgres:   # PostgreSQL data persistence
   chat-postgres:  # Chat memory PostgreSQL data persistence
+  nocodb-data:    # NocoDB data persistence
+  nocodb-postgres: # NocoDB PostgreSQL data persistence
 services:
   # Redis - Cache and session storage
   n8n-redis:
@@ -165,9 +173,6 @@ services:
         limits:
           cpus: "0.25"
           memory: 256M
-        reservations:
-          cpus: "0.1"
-          memory: 128M
     healthcheck:
       interval: 30s
       retries: 5
@@ -177,51 +182,150 @@ services:
 
   # Brave Search MCP Server - Web search capabilities
   mcp-brave-search:
-    image: ghcr.io/yourusername/mcp-brave-search:latest
+    image: mcp/brave-search:latest
     restart: unless-stopped
     container_name: mcp-brave-search
     networks:
       - support_network
     ports:
-      - ${BRAVE_SEARCH_PORT:-3002}:3000
+      - ${BRAVE_SEARCH_PORT:-3002}:8080
     environment:
-      BRAVE_API_KEY: ${BRAVE_API_KEY:-your-brave-api-key}
+      BRAVE_API_KEY: ${BRAVE_API_KEY}
     deploy:
       resources:
         limits:
           cpus: "0.5"
           memory: 512M
-        reservations:
-          cpus: "0.25"
-          memory: 256M
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/mcp"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 20s
 
-  # Wikipedia MCP Server - Knowledge base access
+  # Wikipedia MCP Server - Knowledge base access (stdio mode)
   mcp-wikipedia:
-    image: ghcr.io/yourusername/mcp-wikipedia:latest
+    image: mcp/wikipedia-mcp:latest
     restart: unless-stopped
     container_name: mcp-wikipedia
     networks:
       - support_network
-    ports:
-      - ${WIKIPEDIA_PORT:-3003}:3000
     deploy:
       resources:
         limits:
           cpus: "0.5"
           memory: 512M
+
+  # Firecrawl MCP Server - Advanced web scraping (stdio mode)
+  mcp-firecrawl:
+    image: mcp/firecrawl:latest
+    restart: unless-stopped
+    container_name: mcp-firecrawl
+    networks:
+      - support_network
+    environment:
+      FIRECRAWL_API_KEY: ${FIRECRAWL_API_KEY}
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  # Puppeteer MCP Server - Browser automation (stdio mode)
+  mcp-puppeteer:
+    image: mcp/puppeteer:latest
+    restart: unless-stopped
+    container_name: mcp-puppeteer
+    networks:
+      - support_network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  # Time MCP Server - Time and timezone operations (stdio mode)
+  mcp-time:
+    image: mcp/time:latest
+    restart: unless-stopped
+    container_name: mcp-time
+    networks:
+      - support_network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+
+  # Sequential Thinking MCP Server - Problem-solving assistance (stdio mode)
+  mcp-sequential-thinking:
+    image: mcp/sequentialthinking:latest
+    restart: unless-stopped
+    container_name: mcp-sequential-thinking
+    networks:
+      - support_network
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+
+  # NocoDB PostgreSQL Database - Dedicated database for NocoDB
+  nocodb-postgres:
+    image: postgres:17-bookworm
+    restart: unless-stopped
+    container_name: nocodb-postgres
+    shm_size: 128mb
+    volumes:
+      - nocodb-postgres:/var/lib/postgresql/data  # Persistent chat memory storage
+    environment:
+      POSTGRES_PASSWORD: ${NOCODB_POSTGRES_PASSWORD:-nocodb-password}
+      POSTGRES_USER: ${NOCODB_POSTGRES_USER:-nocodb-user}
+      POSTGRES_DB: ${NOCODB_POSTGRES_DB:-nocodb}
+    networks:
+      - support_network
+    ports:
+      - ${NOCODB_POSTGRES_PORT:-5435}:5432
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
         reservations:
           cpus: "0.25"
           memory: 256M
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      retries: 5
+      start_period: 20s
+      test: ["CMD-SHELL", "pg_isready -d ${NOCODB_POSTGRES_DB} -U ${NOCODB_POSTGRES_USER}"]
+      timeout: 5s
+
+  # NocoDB - Database management and API
+  nocodb:
+    image: nocodb/nocodb:latest
+    restart: unless-stopped
+    container_name: nocodb
+    depends_on:
+      nocodb-postgres:
+        condition: service_healthy
+    networks:
+      - support_network
+    ports:
+      - ${NOCODB_PORT:-8080}:8080
+    environment:
+      NC_DB: "pg://nocodb-postgres:{NOCODB_POSTGRES_PORT:-5435}?u=${NOCODB_POSTGRES_USER:-nocodb-user}&p=${NOCODB_POSTGRES_PASSWORD:-nocodb-password}&d=${NOCODB_POSTGRES_DB:-nocodb}"
+      NC_AUTH_JWT_SECRET: ${NOCODB_JWT_SECRET}
+      NC_SENTRY_DSN: ""
+      NC_DISABLE_TELE: "true"
+    volumes:
+      - nocodb-data:/usr/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 30s
 
   # n8n-MCP Server - AI-powered n8n workflow builder
   n8n-mcp:
@@ -267,3 +371,54 @@ services:
       start_period: 30s
       test: ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
       timeout: 10s
+
+  # =============================================================================
+  # FUTURE SERVICES (Commented Out - Enable as needed)
+  # =============================================================================
+
+  # Slack MCP Server - Team communication integration
+  # mcp-slack:
+  #   image: mcp/slack:latest
+  #   restart: unless-stopped
+  #   container_name: mcp-slack
+  #   networks:
+  #     - support_network
+  #   ports:
+  #     - ${SLACK_PORT:-3008}:3000
+  #   environment:
+  #     SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+  #     SLACK_APP_TOKEN: ${SLACK_APP_TOKEN}
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: "0.5"
+  #         memory: 512M
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 20s
+
+  # Telegram MCP Server - Personal communication integration
+  # mcp-telegram:
+  #   image: mcp/telegram:latest
+  #   restart: unless-stopped
+  #   container_name: mcp-telegram
+  #   networks:
+  #     - support_network
+  #   ports:
+  #     - ${TELEGRAM_PORT:-3009}:3000
+  #   environment:
+  #     TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: "0.5"
+  #         memory: 512M
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 20s

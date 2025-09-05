@@ -14,6 +14,12 @@
 - [x] **IMPLEMENT MODE**: Document Refactoring - Execute documentation reorganization
 - [x] **REFLECT MODE**: Document Refactoring - Review implementation and document insights
 - [x] **ARCHIVE MODE**: Document Refactoring - Consolidate completed task documentation
+- [x] **PLAN MODE**: Background Services Refactoring - Comprehensive planning for MCP service integration
+- [x] **CREATIVE MODE**: MCP Service Architecture Design - Focused design for n8n workflow integration
+- [x] **IMPLEMENT MODE**: MCP Service Integration - Docker Compose refactoring with real MCP services
+- [x] **IMPLEMENT MODE**: NocoDB Integration - Added dedicated PostgreSQL database and fixed configuration
+- [x] **REFLECT MODE**: MCP Implementation Reflection - Comprehensive analysis of implementation successes and challenges
+- [x] **ARCHIVE MODE**: MCP Services Implementation - Consolidated complete project documentation and lessons learned
 - [ ] Execute end-to-end testing per testing plan
 - [ ] Test deployment process and verify site accessibility (pending GitHub Pages setup)
 - [ ] Maintain `docs/status/tasks.md` as the single source of truth

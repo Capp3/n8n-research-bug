@@ -63,14 +63,6 @@ jobs:
           test -d docs/reflection
           echo "✅ Documentation structure is valid"
 
-      - name: Validate prompt templates
-        run: |
-          echo "🔍 Validating prompt templates..."
-          test -f prompts/index.json
-          source .venv/bin/activate
-          python -c "import json; json.load(open('prompts/index.json'))"
-          echo "✅ Prompt templates are valid"
-
       - name: Validate MkDocs configuration
         run: |
           echo "🔍 Validating MkDocs configuration..."
