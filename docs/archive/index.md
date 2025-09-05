@@ -59,6 +59,20 @@
 ### Individual Archives
 For unique content and specific implementation details, see the [individual-files directory](./individual-files/).
 
+**Recently Archived (2025-09):**
+- document-refactoring-uiux-design.md
+- document-refactoring-architecture-design.md
+- n8n-patterns-refactoring.md
+- n8n-patterns-refactoring-plan.md
+- prompt-system-simplification.md
+- prompt-system-simplification-plan.md
+- mcp-servers.md
+- mcp-integration-options.md
+- n8n-mcp-integration.md
+- algorithm.md
+- architecture.md
+- decisions.md
+
 ## Archive Organization
 
 ### By Project Type

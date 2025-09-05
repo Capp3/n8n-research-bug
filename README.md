@@ -1,5 +1,7 @@
 # n8n LLM Document Workflow
 
+
+
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Documentation](https://github.com/Capp3/n8n-research-bug/workflows/Deploy%20Documentation%20to%20GitHub%20Pages/badge.svg)](https://github.com/Capp3/n8n-research-bug/actions/workflows/docs.yml)
 [![Code Quality](https://github.com/Capp3/n8n-research-bug/workflows/Code%20Quality/badge.svg)](https://github.com/Capp3/n8n-research-bug/actions/workflows/code-quality.yml)
@@ -21,6 +23,11 @@ This project implements a comprehensive document processing pipeline that combin
 - **Research Enhancement**: Specialized MCP servers for research and data retrieval
 - **Memory Persistence**: Conversation state management across sessions
 
+## TO DO
+
+TODO Credentials documentation is distributed across `projectbrief.md`, `technical.md`, and `docs/implementation/configuration.md`, but there is no single, explicit credentials setup section. Consider consolidating for clarity.
+TODO `projectbrief.md` still references Context7 MCP integration, which is no longer part of the current workflow. This should be updated or clarified in future documentation passes.
+ 
 ## Quick Start
 
 ### Prerequisites
