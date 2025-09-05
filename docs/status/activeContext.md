@@ -8,8 +8,8 @@
 
 ### Document Refactoring (2025-01-28)
 - **Status**: COMPLETED
-- **Archive**: [Document Refactoring Archive](../archive/document-refactoring-20250128.md)
-- **Reflection**: [Document Refactoring Reflection](../reflection/2025-01-28/reflection-document-refactoring-20250128.md)
+# - **Archive**: [Document Refactoring Archive](../archive/document-refactoring-20250128.md)
+# - **Reflection**: [Document Refactoring Reflection](../reflection/2025-01-28/reflection-document-refactoring-20250128.md)
 - **Key Achievements**:
   - Root directory cleanup (only README.md remains)
   - Reflection organization with date-based structure

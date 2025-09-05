@@ -23,7 +23,7 @@ This section contains all implementation-related documentation for the n8n LLM D
 - **[Chat Memory API](chat-memory-api.md)** - Complete API reference
 
 ### AI Integration
-- **[n8n-MCP Integration](n8n-mcp-integration.md)** - AI-powered n8n workflow builder
+# # - **[n8n-MCP Integration](n8n-mcp-integration.md)** - AI-powered n8n workflow builder
 
 ### Testing and Troubleshooting
 - **[Testing Guide](testing.md)** - Comprehensive testing procedures

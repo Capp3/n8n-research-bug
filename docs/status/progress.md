@@ -78,9 +78,9 @@
 - [x] tasks.md updated with progress
 
 ### Archive
-- **Archive Document**: [Document Refactoring Archive](../../archive/document-refactoring-20250128.md)
-- **Reflection Document**: [Document Refactoring Reflection](../../reflection/2025-01-28/reflection-document-refactoring-20250128.md)
-- **Creative Phase Documents**: [Architecture Design](../../creative/document-refactoring-architecture-design.md), [UI/UX Design](../../creative/document-refactoring-uiux-design.md)
+# - **Archive Document**: [Document Refactoring Archive](../../archive/document-refactoring-20250128.md)
+# - **Reflection Document**: [Document Refactoring Reflection](../../reflection/2025-01-28/reflection-document-refactoring-20250128.md)
+# - **Creative Phase Documents**: [Architecture Design](../../creative/document-refactoring-architecture-design.md), [UI/UX Design](../../creative/document-refactoring-uiux-design.md)
 
 ### Next Steps
 - **Link Fixes**: Address minor link warnings in MkDocs build
