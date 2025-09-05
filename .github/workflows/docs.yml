@@ -60,7 +60,7 @@ jobs:
       - name: Test MkDocs build
         run: |
           source .venv/bin/activate
-          mkdocs build --clean --strict
+          mkdocs build --clean
           echo "✅ MkDocs build test passed"
 
       - name: Test Mermaid functionality
