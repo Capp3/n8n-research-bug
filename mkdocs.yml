@@ -1,4 +1,4 @@
-site_name: n8n LLM Document Workflow
+site_name: Research Bug 0.0.2
 site_description: Multi-agent AI workflow for document enhancement and collaboration using n8n, LangChain, and Telegram integration
 site_author: cappy
 site_url: https://capp3.github.io/n8n-research-bug/
@@ -14,7 +14,6 @@ theme:
   name: readthedocs
   color_mode: auto
   user_color_mode_toggle: true
-  nav_style: primary
   hljs_style: base16-gruvbox-light-soft
   hljs_style_dark: base16-gruvbox-dark-hard
 
@@ -22,14 +21,49 @@ theme:
 plugins:
   - search:
       lang: en
+  - mermaid2:
+      arguments:
+        theme: base
+        themeVariables:
+          primaryColor: '#059669'
+          primaryTextColor: '#1f2937'
+          primaryBorderColor: '#059669'
+          lineColor: '#6b7280'
+          secondaryColor: '#f3f4f6'
+          tertiaryColor: '#ffffff'
 
 # Markdown extensions
 markdown_extensions:
-  - codehilite
+  - codehilite:
+      use_pygments: true
+      css_class: highlight
   - fenced_code
   - tables
   - toc:
       permalink: true
+      permalink_title: "Link to this section"
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.tilde
+  - pymdownx.caret
+  - attr_list
+  - md_in_html
 
 # Page tree
 nav:
@@ -69,3 +103,4 @@ nav:
       - Cinder Theme Implementation: status/cinder-theme-implementation-summary.md
   - Test Data:
       - Overview: test-data/index.md
+  - Mermaid Test: mermaid-test.md

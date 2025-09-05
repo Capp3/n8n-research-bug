@@ -1,7 +1,7 @@
 version: 2
 updates:
   # Python dependencies (MkDocs, etc.) - using UV
-  - package-ecosystem: "uv"
+  - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
@@ -19,6 +19,10 @@ updates:
       - "dependencies"
       - "python"
       - "uv"
+    ignore:
+      # Ignore major version updates for now
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   # Node.js dependencies (prompt-server)
   - package-ecosystem: "npm"
@@ -39,6 +43,10 @@ updates:
       - "dependencies"
       - "nodejs"
       - "prompt-server"
+    ignore:
+      # Ignore major version updates for now
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   # GitHub Actions dependencies
   - package-ecosystem: "github-actions"

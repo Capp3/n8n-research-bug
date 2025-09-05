@@ -5,9 +5,13 @@ mkdocs-mermaid2-plugin>=1.0.0
 # Additional dependencies for documentation
 pymdown-extensions>=10.0.0
 markdown>=3.4.0
+materialx>=0.1.0
 
 # Link checking for documentation validation
 linkchecker>=10.0.0
 
 # YAML validation for CI/CD
 PyYAML>=6.0.0
+
+# Enhanced markdown processing
+pygments>=2.15.0

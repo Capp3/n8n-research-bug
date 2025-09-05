@@ -8,6 +8,7 @@ on:
       - 'docs/**'
       - 'prompts/**'
       - 'mkdocs.yml'
+      - 'scripts/requirements.txt'
       - '.github/workflows/docs.yml'
   pull_request:
     branches:
@@ -16,7 +17,9 @@ on:
       - 'docs/**'
       - 'prompts/**'
       - 'mkdocs.yml'
+      - 'scripts/requirements.txt'
       - '.github/workflows/docs.yml'
+  workflow_dispatch: # Allow manual triggering
 
 permissions:
   contents: read
@@ -28,7 +31,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -40,6 +43,92 @@ jobs:
         uses: astral-sh/setup-uv@v6
         with:
           version: 'latest'
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: ${{ runner.os }}-uv-${{ hashFiles('scripts/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: Create virtual environment and install dependencies
+        run: |
+          uv venv
+          uv pip install -r scripts/requirements.txt
+
+      - name: Test MkDocs build
+        run: |
+          source .venv/bin/activate
+          mkdocs build --clean --strict
+          echo "✅ MkDocs build test passed"
+
+      - name: Test Mermaid functionality
+        run: |
+          source .venv/bin/activate
+          # Test that Mermaid charts are properly rendered
+          mkdocs build --clean
+          # Check if Mermaid test page exists and builds
+          test -f site/mermaid-test/index.html
+          echo "✅ Mermaid functionality test passed"
+
+      - name: Validate documentation structure
+        run: |
+          # Check if all required files exist
+          test -f mkdocs.yml
+          test -f docs/index.md
+          test -f docs/projectbrief.md
+          test -f docs/technical.md
+          test -f docs/system-prompts.md
+          test -f docs/mermaid-test.md
+
+          # Check if all directories exist
+          test -d docs/creative
+          test -d docs/prompts
+          test -d docs/implementation
+          test -d docs/contributing
+          test -d docs/status
+          test -d docs/archive
+          test -d docs/test-data
+          test -d docs/reflection
+
+          echo "✅ Documentation structure validation passed"
+
+      - name: Check for broken links
+        run: |
+          source .venv/bin/activate
+          # Install link checker
+          uv pip install linkchecker
+
+          # Build site first
+          mkdocs build --clean
+
+          # Check for broken links (excluding external links for now)
+          linkchecker --check-extern --ignore-url="^https?://" site/ || true
+
+          echo "✅ Link checking completed"
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: 'latest'
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: ${{ runner.os }}-uv-${{ hashFiles('scripts/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
 
       - name: Create virtual environment and install dependencies
         run: |
@@ -53,7 +142,7 @@ jobs:
         run: |
           source .venv/bin/activate
           mkdocs build --clean
-          echo "MkDocs build completed successfully"
+          echo "✅ MkDocs build completed successfully"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
@@ -71,59 +160,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Install UV
-        uses: astral-sh/setup-uv@v6
-        with:
-          version: 'latest'
-
-      - name: Create virtual environment and install dependencies
-        run: |
-          uv venv
-          uv pip install -r scripts/requirements.txt
-
-      - name: Test MkDocs build
-        run: |
-          source .venv/bin/activate
-          mkdocs build --clean
-          echo "MkDocs build test passed"
-
-      - name: Validate documentation structure
-        run: |
-          # Check if all required files exist
-          test -f mkdocs.yml
-          test -f docs/index.md
-          test -f docs/projectbrief.md
-          test -f docs/technical.md
-          test -f docs/system-prompts.md
-
-          # Check if all directories exist
-          test -d docs/creative
-          test -d docs/prompts
-          test -d docs/implementation
-          test -d docs/contributing
-          test -d docs/status
-          test -d docs/archive
-          test -d docs/test-data
-
-          echo "Documentation structure validation passed"
-
-      - name: Check for broken links
-        run: |
-          # Install link checker
-          source .venv/bin/activate
-          uv pip install linkchecker
-
-          # Build site first
-          mkdocs build --clean
-
-          # Check for broken links (excluding external links for now)
-          linkchecker --check-extern --ignore-url="^https?://" site/ || true
-
-          echo "Link checking completed"

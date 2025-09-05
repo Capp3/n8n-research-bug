@@ -5,6 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch: # Allow manual triggering
 
 jobs:
   validate:
@@ -12,23 +13,35 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Install UV
         uses: astral-sh/setup-uv@v6
         with:
           version: 'latest'
 
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: ${{ runner.os }}-uv-${{ hashFiles('scripts/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
       - name: Create virtual environment and install dependencies
         run: |
           uv venv
-          uv pip install PyYAML
+          uv pip install PyYAML linkchecker
 
       - name: Validate YAML files
         run: |
           echo "🔍 Validating YAML files..."
+          source .venv/bin/activate
           python -c "import yaml; yaml.safe_load(open('mkdocs.yml'))"
           for file in .github/workflows/*.yml; do
             echo "Validating $file"
+            source .venv/bin/activate
             python -c "import yaml; yaml.safe_load(open('$file'))"
           done
           echo "✅ All YAML files are valid"
@@ -39,17 +52,51 @@ jobs:
           test -f docs/index.md
           test -f docs/projectbrief.md
           test -f docs/technical.md
+          test -f docs/system-prompts.md
+          test -f docs/mermaid-test.md
           test -d docs/creative
           test -d docs/implementation
           test -d docs/contributing
           test -d docs/status
           test -d docs/archive
           test -d docs/test-data
+          test -d docs/reflection
           echo "✅ Documentation structure is valid"
 
       - name: Validate prompt templates
         run: |
           echo "🔍 Validating prompt templates..."
           test -f prompts/index.json
+          source .venv/bin/activate
           python -c "import json; json.load(open('prompts/index.json'))"
           echo "✅ Prompt templates are valid"
+
+      - name: Validate MkDocs configuration
+        run: |
+          echo "🔍 Validating MkDocs configuration..."
+          uv pip install -r scripts/requirements.txt
+          source .venv/bin/activate
+          mkdocs build --clean --strict
+          echo "✅ MkDocs configuration is valid"
+
+      - name: Check for broken internal links
+        run: |
+          echo "🔍 Checking for broken internal links..."
+          source .venv/bin/activate
+          mkdocs build --clean
+          # Check for common broken link patterns
+          if grep -r "\.md" site/ | grep -v "\.html" | grep -v "mermaid"; then
+            echo "⚠️  Found potential broken markdown links"
+            grep -r "\.md" site/ | grep -v "\.html" | grep -v "mermaid" || true
+          else
+            echo "✅ No broken internal links found"
+          fi
+
+      - name: Validate file permissions
+        run: |
+          echo "🔍 Validating file permissions..."
+          # Check that all .md files are readable
+          find docs/ -name "*.md" -not -readable && exit 1 || echo "✅ All markdown files are readable"
+          # Check that all .yml files are readable
+          find .github/ -name "*.yml" -not -readable && exit 1 || echo "✅ All workflow files are readable"
+          echo "✅ File permissions are valid"

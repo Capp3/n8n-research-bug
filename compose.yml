@@ -224,46 +224,46 @@ services:
       retries: 3
 
   # n8n-MCP Server - AI-powered n8n workflow builder
-  # n8n-mcp:
-  #   image: ghcr.io/czlonkowski/n8n-mcp:latest
-  #   restart: unless-stopped
-  #   container_name: n8n-mcp
-  #   depends_on:
-  #     n8n-postgres:
-  #       condition: service_healthy  # Wait for PostgreSQL to be ready
-  #   networks:
-  #     - support_network
-  #   ports:
-  #     - ${N8N_MCP_PORT:-3001}:3001  # Default: localhost:3001
-  #   environment:
-  #     # Database connection
-  #     DATABASE_URL: postgresql://${SUPPORT_POSTGRES_USER:-support-user}:${SUPPORT_POSTGRES_PASSWORD:-support-password}@n8n-postgres:5432/${SUPPORT_POSTGRES_DB:-support}
-  #     # MCP Server configuration
-  #     MCP_SERVER_PORT: ${N8N_MCP_PORT:-3001}
-  #     MCP_SERVER_HOST: ${N8N_MCP_HOST:-0.0.0.0}
-  #     # n8n API configuration
-  #     N8N_API_URL: ${N8N_API_URL:-http://n8n:5678}
-  #     N8N_API_KEY: ${N8N_API_KEY}
-  #     # Optional: n8n docs path for enhanced node information
-  #     N8N_DOCS_PATH: ${N8N_DOCS_PATH:-/app/n8n-docs}UV
+  n8n-mcp:
+    image: ghcr.io/czlonkowski/n8n-mcp:latest
+    restart: unless-stopped
+    container_name: n8n-mcp
+    depends_on:
+      n8n-postgres:
+        condition: service_healthy  # Wait for PostgreSQL to be ready
+    networks:
+      - support_network
+    ports:
+      - ${N8N_MCP_PORT:-3001}:3001  # Default: localhost:3001
+    environment:
+      # Database connection
+      DATABASE_URL: postgresql://${SUPPORT_POSTGRES_USER:-support-user}:${SUPPORT_POSTGRES_PASSWORD:-support-password}@n8n-postgres:5432/${SUPPORT_POSTGRES_DB:-support}
+      # MCP Server configuration
+      MCP_SERVER_PORT: ${N8N_MCP_PORT:-3001}
+      MCP_SERVER_HOST: ${N8N_MCP_HOST:-0.0.0.0}
+      # n8n API configuration
+      N8N_API_URL: ${N8N_API_URL:-http://n8n:5678}
+      N8N_API_KEY: ${N8N_API_KEY}
+      # Optional: n8n docs path for enhanced node information
+      N8N_DOCS_PATH: ${N8N_DOCS_PATH:-/app/n8n-docs}UV
 
-  #     # Logging and debug
-  #     LOG_LEVEL: ${N8N_MCP_LOG_LEVEL:-info}
-  #     DEBUG: ${N8N_MCP_DEBUG:-false}
-  #   volumes:
-  #     # Optional: Mount n8n docs for enhanced functionality
-  #     - ${N8N_DOCS_PATH:-./n8n-docs}:/app/n8n-docs:ro
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         cpus: "1.0"
-  #         memory: 1G
-  #       reservations:
-  #         cpus: "0.5"
-  #         memory: 512M
-  #   healthcheck:
-  #     interval: 30s
-  #     retries: 5
-  #     start_period: 30s
-  #     test: ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
-  #     timeout: 10s
+      # Logging and debug
+      LOG_LEVEL: ${N8N_MCP_LOG_LEVEL:-info}
+      DEBUG: ${N8N_MCP_DEBUG:-false}
+    volumes:
+      # Optional: Mount n8n docs for enhanced functionality
+      - ${N8N_DOCS_PATH:-./n8n-docs}:/app/n8n-docs:ro
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    healthcheck:
+      interval: 30s
+      retries: 5
+      start_period: 30s
+      test: ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
+      timeout: 10s
