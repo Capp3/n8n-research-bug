@@ -147,13 +147,9 @@ The project includes a comprehensive Makefile with commands for all development 
 ### Implementation Guides
 - **[Setup Guide](docs/implementation/setup-guide.md)** - Complete n8n workflow setup
 - **[Configuration](docs/implementation/configuration.md)** - Environment and credential setup
-- **[Makefile Commands](docs/implementation/makefile-commands.md)** - Complete development command reference
 - **[Testing](docs/implementation/testing.md)** - End-to-end testing procedures
-- **[Variable Mapping](docs/implementation/variable-mapping.md)** - Complete variable reference
-- **[GitHub Pages Deployment](docs/implementation/github-pages-deployment.md)** - Automated documentation deployment
 
 ### Creative Design
-- **[UI/UX Design](docs/creative/uiux.md)** - User interface and experience decisions
 - **[Architecture](docs/creative/architecture.md)** - System architecture and data flow
 - **[Algorithms](docs/creative/algorithm.md)** - Core algorithms and implementation details
 - **[Design Decisions](docs/creative/decisions.md)** - Key design choices and rationale

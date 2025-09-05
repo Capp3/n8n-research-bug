@@ -71,22 +71,21 @@ nav:
       - Overview: implementation/index.md
       - Setup Guide: implementation/setup-guide.md
       - Configuration: implementation/configuration.md
-      - Makefile Commands: implementation/makefile-commands.md
       - Testing: implementation/testing.md
-      - Variable Mapping: implementation/variable-mapping.md
-      - GitHub Pages: implementation/github-pages-deployment.md
-      - Prompt Server: implementation/prompt-server.md
-      - Chat Memory: implementation/chat-memory.md
-      - Chat Memory API: implementation/chat-memory-api.md
-      - MCP Servers: implementation/mcp-servers.md
+      # - Variable Mapping: implementation/variable-mapping.md
+      # - GitHub Pages: implementation/github-pages-deployment.md
+      # - Prompt Server: implementation/prompt-server.md
+      # - Chat Memory: implementation/chat-memory.md
+      # - Chat Memory API: implementation/chat-memory-api.md
+      # - MCP Servers: implementation/mcp-servers.md
   - Prompts:
       - Overview: prompts/index.md
       - Schema Reference: prompts/schema.md
   - Contributing:
       - Overview: contributing/index.md
       - Prompt Contributions: contributing/prompt-contributions.md
-  - Reflection: reflection/index.md
-  - Creative: creative/index.md
+  # - Reflection: reflection/index.md
+  # - Creative: creative/index.md
   - Status:
       - Overview: status/index.md
       - Project Status: status/project-status.md
@@ -94,7 +93,7 @@ nav:
       - Build Summary: status/build-summary-credentials.md
       - Chat Memory Implementation: status/postgresql-chat-memory-implementation-summary.md
       - Documentation Updates: status/documentation-updates-summary.md
-      - Cinder Theme Implementation: status/cinder-theme-implementation-summary.md
+      # - Cinder Theme Implementation: status/cinder-theme-implementation-summary.md
   - Test Data:
       - Overview: test-data/index.md
-  - Mermaid Test: mermaid-test.md
+  # - Mermaid Test: mermaid-test.md
