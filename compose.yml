@@ -1,5 +1,5 @@
 # n8n Research Bug - Support Services
-# Provides PostgreSQL with pgvector, Redis, and Adminer for the prompt-server
+# Provides PostgreSQL with pgvector, Redis, and Adminer for the n8n workflow
 #
 # Quick Start:
 #   1. Copy sample.env to .env: cp sample.env .env
@@ -11,7 +11,9 @@
 #   - PostgreSQL: localhost:5432 (main database + chat memory)
 #   - Redis: localhost:6379 (cache + sessions)
 #   - Adminer: localhost:8080 (database management UI)
-#   - n8n-MCP: localhost:3001 (AI-powered n8n workflow builder - commented out)
+#   - Brave Search MCP: localhost:3002 (web search capabilities)
+#   - Wikipedia MCP: localhost:3003 (knowledge base access)
+#   - n8n-MCP: localhost:3001 (AI-powered n8n workflow builder)
 #
 # Environment variables in .env file control ports and credentials
 name: researchbug-support
@@ -25,6 +27,7 @@ networks:
 volumes:
   n8n-redis:      # Redis data persistence
   n8n-postgres:   # PostgreSQL data persistence
+  chat-postgres:  # Chat memory PostgreSQL data persistence
 services:
   # Redis - Cache and session storage
   n8n-redis:
@@ -83,7 +86,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}"]
       timeout: 5s
 
-  # Main PostgreSQL database - Chat memory and application data
+  # Main PostgreSQL database - Application data with pgvector support
   n8n-postgres:
     image: postgres:17-bookworm
     restart: unless-stopped
@@ -111,7 +114,38 @@ services:
       interval: 30s
       retries: 5
       start_period: 20s
-      test: ["CMD-SHELL", "pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -d ${SUPPORT_POSTGRES_DB} -U ${SUPPORT_POSTGRES_USER}"]
+      timeout: 5s
+
+  # Chat Memory PostgreSQL database - Dedicated for conversation storage
+  chat-postgres:
+    image: postgres:17-bookworm
+    restart: unless-stopped
+    container_name: chat-postgres
+    shm_size: 64mb  # Smaller shared memory for chat storage
+    volumes:
+      - chat-postgres:/var/lib/postgresql/data  # Persistent chat memory storage
+    environment:
+      POSTGRES_PASSWORD: ${CHAT_POSTGRES_PASSWORD:-chat-password}
+      POSTGRES_USER: ${CHAT_POSTGRES_USER:-chat-user}
+      POSTGRES_DB: ${CHAT_POSTGRES_DB:-chat_memory}
+    networks:
+      - support_network
+    ports:
+      - ${CHAT_POSTGRES_PORT:-5433}:5432  # Different port to avoid conflicts
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    healthcheck:
+      interval: 30s
+      retries: 5
+      start_period: 20s
+      test: ["CMD-SHELL", "pg_isready -d ${CHAT_POSTGRES_DB} -U ${CHAT_POSTGRES_USER}"]
       timeout: 5s
 
   # Adminer - Web-based database management interface
@@ -140,6 +174,54 @@ services:
       start_period: 20s
       test: ["CMD-SHELL", "curl -f http://localhost:8080 || exit 1"]
       timeout: 5s
+
+  # Brave Search MCP Server - Web search capabilities
+  mcp-brave-search:
+    image: ghcr.io/yourusername/mcp-brave-search:latest
+    restart: unless-stopped
+    container_name: mcp-brave-search
+    networks:
+      - support_network
+    ports:
+      - ${BRAVE_SEARCH_PORT:-3002}:3000
+    environment:
+      BRAVE_API_KEY: ${BRAVE_API_KEY:-your-brave-api-key}
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Wikipedia MCP Server - Knowledge base access
+  mcp-wikipedia:
+    image: ghcr.io/yourusername/mcp-wikipedia:latest
+    restart: unless-stopped
+    container_name: mcp-wikipedia
+    networks:
+      - support_network
+    ports:
+      - ${WIKIPEDIA_PORT:-3003}:3000
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # n8n-MCP Server - AI-powered n8n workflow builder
   # n8n-mcp:

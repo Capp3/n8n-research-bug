@@ -34,46 +34,38 @@ markdown_extensions:
 # Page tree
 nav:
   - Home: index.md
-  - Quick Start: QUICK_START.md
   - Project Brief: projectbrief.md
-  - Technical: technical.md
+  - Technical Summary: technical.md
   - System Prompts: system-prompts.md
+  - Quick Start: QUICK_START.md
   - Implementation:
-    - implementation/index.md
-    - implementation/setup-guide.md
-    - implementation/credentials-guide.md
-    - implementation/workflow-analysis.md
-    - implementation/configuration.md
-    - implementation/environment-setup.md
-    - implementation/chat-memory.md
-    - implementation/chat-memory-api.md
-    - implementation/n8n-mcp-integration.md
-    - implementation/testing.md
-    - implementation/troubleshooting.md
-  - Creative:
-    - creative/index.md
-    - creative/uiux.md
-    - creative/architecture.md
-    - creative/algorithm.md
-    - creative/decisions.md
-  - LLM Templates:
-    - prompts/index.md
-    - prompts/schema.md
-  - Test Data:
-    - test-data/index.md
-    - test-data/sample-document.md
-    - test-data/submission-brief.md
-    - test-data/style-instructions.md
-    - test-data/test-log-template.md
+      - Overview: implementation/index.md
+      - Setup Guide: implementation/setup-guide.md
+      - Configuration: implementation/configuration.md
+      - Makefile Commands: implementation/makefile-commands.md
+      - Testing: implementation/testing.md
+      - Variable Mapping: implementation/variable-mapping.md
+      - GitHub Pages: implementation/github-pages-deployment.md
+      - Prompt Server: implementation/prompt-server.md
+      - Chat Memory: implementation/chat-memory.md
+      - Chat Memory API: implementation/chat-memory-api.md
+      - MCP Servers: implementation/mcp-servers.md
+  - Prompts:
+      - Overview: prompts/index.md
+      - Schema Reference: prompts/schema.md
   - Contributing:
-    - contributing/index.md
-    - contributing/prompt-contributions.md
-    - contributing/code-contributions.md
+      - Overview: contributing/index.md
+      - Prompt Contributions: contributing/prompt-contributions.md
+  - Archive: archive/index.md
+  - Reflection: reflection/index.md
+  - Creative: creative/index.md
   - Status:
-    - status/index.md
-    - status/project-status.md
-    - status/tasks.md
-    - status/build-summary-credentials.md
-    - status/postgresql-chat-memory-implementation-summary.md
-  - Archive:
-    - archive/index.md
+      - Overview: status/index.md
+      - Project Status: status/project-status.md
+      - Tasks: status/tasks.md
+      - Build Summary: status/build-summary-credentials.md
+      - Chat Memory Implementation: status/postgresql-chat-memory-implementation-summary.md
+      - Documentation Updates: status/documentation-updates-summary.md
+      - Cinder Theme Implementation: status/cinder-theme-implementation-summary.md
+  - Test Data:
+      - Overview: test-data/index.md

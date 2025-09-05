@@ -1,5 +1,5 @@
 {
-  "name": "ResearchBug",
+  "name": "Research Bug",
   "nodes": [
     {
       "parameters": {
@@ -76,12 +76,40 @@
     },
     {
       "parameters": {
-        "functionCode": "// Generate conversation ID and initialize workflow state\nconst timestamp = new Date().toISOString();\nconst conversationId = `${$json.project_name}-${Date.now()}`;\n\nreturn [{\n  json: {\n    ...items[0].json,\n    conversation_id: conversationId,\n    created_at: timestamp,\n    research_scope: $json.research_scope || 'comprehensive',\n    workflow_state: 'initialized'\n  }\n}];"
+        "assignments": {
+          "assignments": [
+            {
+              "id": "conv-id",
+              "name": "conversation_id",
+              "value": "={{$json.project_name}}-{{$now.timestamp}}",
+              "type": "string"
+            },
+            {
+              "id": "timestamp",
+              "name": "created_at",
+              "value": "={{$now.toISO()}}",
+              "type": "string"
+            },
+            {
+              "id": "scope",
+              "name": "research_scope",
+              "value": "={{$json.research_scope || 'comprehensive'}}",
+              "type": "string"
+            },
+            {
+              "id": "state",
+              "name": "workflow_state",
+              "value": "initialized",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
       },
       "id": "12047dc6-c389-4294-b543-78afa1ac53a7",
-      "name": "Generate Conversation ID",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
+      "name": "Initialize Conversation Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -1168,
         -224
@@ -106,7 +134,22 @@
     },
     {
       "parameters": {
-        "text": "=You are starting a new collaborative document editing and research session.\n\nTASK OVERVIEW:\n- Analyze the provided document for structure, completeness, and clarity  \n- Apply the operator's research requirements and expansion requests\n- Conduct any necessary research to fulfill the requirements\n- Create a comprehensive, well-structured document\n- Ensure the document meets professional standards\n\nDocument Title: {{$json.project_name}}\nInitial Document:\n---\n{{$json.markdown_document}}\n---\nResearch and Expansion Requirements:\n{{$json.personal_thoughts}}\n\nDELIVERABLE:\nReturn a complete, enhanced markdown document that addresses all requirements. Include:\n1. Improved structure and organization\n2. Research findings integrated naturally  \n3. Clear section divisions\n4. Professional formatting\n5. Table of contents if document exceeds 1000 words\n\nReturn ONLY the updated markdown document.",
+        "url": "=https://raw.githubusercontent.com/Capp3/n8n-research-bug/main/prompts/user-prompts/form-initial.md",
+        "method": "GET",
+        "options": {}
+      },
+      "id": "fetch-form-initial-prompt",
+      "name": "Fetch Form Initial Prompt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -720,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "text": "=You are a professional document collaborator operating in a multi-agent workflow. Read the entire document before writing. Maintain the author's tone, improve clarity and structure, and strictly follow markdown best practices (heading hierarchy, concise paragraphs, meaningful bullets, tables when helpful). Work iteratively with focused changes. Ask concise clarifying questions only when necessary.\n\nBe deterministic and consistent. Prefer explicit, scannable outputs. Use mermaid diagrams only for brief plan visualizations when it significantly improves clarity.\n\n- Emphasize small, targeted edits per turn\n- Ask up to 3 clarifying questions only when blockers exist\n- Include brief mermaid only for plan clarity\n\n{{$json.form_initial_prompt || 'You are starting a new collaborative document editing and research session.'}}\n\nDocument Title: {{$json.project_name}}\nInitial Document:\n---\n{{$json.markdown_document}}\n---\nResearch and Expansion Requirements:\n{{$json.submission_brief}}",
         "options": {}
       },
       "id": "86aeb38e-60a5-49ce-98bf-1e699b429f5e",
@@ -120,12 +163,22 @@
     },
     {
       "parameters": {
-        "functionCode": "// Build retrieval query from project context and latest request\nconst parts = [];\nif ($json.project_name) parts.push($json.project_name);\nif ($json.personal_thoughts) parts.push($json.personal_thoughts);\nif ($json.telegram_message) parts.push($json.telegram_message);\nconst query = parts.join(' \n');\nreturn [{ json: { ...items[0].json, retrieval_query: query.slice(0, 4000) } }];"
+        "assignments": {
+          "assignments": [
+            {
+              "id": "query",
+              "name": "retrieval_query",
+              "value": "={{[$json.project_name, $json.submission_brief, $json.telegram_message].filter(Boolean).join(' ').slice(0, 4000)}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
       },
       "id": "91c436df-1826-470d-8b74-16535091b0cd",
       "name": "Build Retrieval Query",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -368,
         -224
@@ -133,30 +186,13 @@
     },
     {
       "parameters": {
-        "url": "https://api.openai.com/v1/embeddings",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "httpHeaderAuth",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {}
-          ]
-        },
+        "model": "text-embedding-3-small",
         "options": {}
       },
       "id": "54af19ec-7d8f-4174-b89b-9b7f24fabd57",
-      "name": "Embed Retrieval Query",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
+      "name": "Generate Query Embedding",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1,
       "position": [
         -144,
         -224
@@ -164,13 +200,21 @@
     },
     {
       "parameters": {
-        "operation": "executeQuery",
-        "query": "=SELECT content AS chunk, chunk_index FROM chunks WHERE project_name = '{{$json.project_name}}' ORDER BY embedding <-> CAST('[{{join($json.data[0].embedding, ',')}}]' AS vector) LIMIT 6;",
-        "additionalFields": {}
+        "topK": 6,
+        "options": {
+          "metadata": {
+            "values": [
+              {
+                "name": "project_name",
+                "value": "={{$json.project_name}}"
+              }
+            ]
+          }
+        }
       },
       "id": "45dacba5-6163-4dad-8555-aa901195378b",
-      "name": "Postgres Similarity Search",
-      "type": "n8n-nodes-base.postgres",
+      "name": "Vector Similarity Search",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
       "typeVersion": 1,
       "position": [
         80,
@@ -179,12 +223,22 @@
     },
     {
       "parameters": {
-        "functionCode": "// Consolidate retrieved chunks into a single context string\nconst rows = items.map(i => i.json);\nconst ctx = rows.map(r => `- ${r.chunk}`).join('\n');\n// Merge with the latest draft from Editor if available\nconst base = $items(\"AI Agent - Initial Enhancement\", 0, 0).json || {};\nreturn [{ json: { ...base, retrieved_context: ctx } }];"
+        "assignments": {
+          "assignments": [
+            {
+              "id": "context",
+              "name": "retrieved_context",
+              "value": "={{$input.all().map(item => '- ' + item.json.pageContent).join('\\n')}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
       },
       "id": "6b1d6f30-43df-43ed-8b0c-4ac08664ec83",
       "name": "Format Retrieved Context",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         304,
         -224
@@ -192,11 +246,27 @@
     },
     {
       "parameters": {
-        "text": "=You are a Research Agent with access to MCP tools via Context7.\n\nCONTEXT (retrieved):\n{{$json.retrieved_context || ''}}\n\nGOAL:\n- Produce a research_addendum (markdown) with citations and comparative tables relevant to the user's requirements and current draft.\n- Keep to facts; add links and references.\n\nINPUTS:\n- Project: {{$json.project_name}}\n- Research scope: {{$json.research_scope}}\n- Current draft (from Editor): {{$json.output || $json.parsed_content || ''}}\n\nOUTPUT:\n- Return ONLY markdown addendum suitable for direct insertion, with inline links and a References section at the end.",
+        "url": "=https://raw.githubusercontent.com/Capp3/n8n-research-bug/main/prompts/user-prompts/research-addendum.md",
+        "method": "GET",
         "options": {}
       },
+      "id": "fetch-research-prompt",
+      "name": "Fetch Research Prompt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        528,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "text": "=You are a professional document collaborator operating in a multi-agent workflow. Read the entire document before writing. Maintain the author's tone, improve clarity and structure, and strictly follow markdown best practices (heading hierarchy, concise paragraphs, meaningful bullets, tables when helpful). Work iteratively with focused changes. Ask concise clarifying questions only when necessary.\n\nBe deterministic and consistent. Prefer explicit, scannable outputs. Use mermaid diagrams only for brief plan visualizations when it significantly improves clarity.\n\n- Use specialized tools for comprehensive research:\n  - brave_search: Web search and current information\n  - wikipedia_search: Factual knowledge and references\n- Cite official/primary sources; include inline links and a short References section\n- Prefer concise, scannable outputs; use tables for comparisons\n- Ask at most 2 clarifying questions if direction is ambiguous\n\n{{$json.research_addendum_prompt || 'You are a Research Agent with access to specialized tools.'}}",
+        "options": {},
+        "hasOutputParser": true
+      },
       "id": "698cfd44-26d7-41eb-8c9e-849cd5a50a9e",
-      "name": "AI Agent - Research (Context7 Tools)",
+      "name": "AI Agent - Research (Tools)",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 1,
       "position": [
@@ -206,12 +276,28 @@
     },
     {
       "parameters": {
-        "functionCode": "// Parse research addendum and basic citations from agent output\nconst output = $json.output || $json.text || '';\nconst links = Array.from(output.matchAll(/https?:\\/\\/[^\\s)]+/g)).map(m => m[0]);\nreturn [{ json: { ...items[0].json, research_addendum: output.trim(), citations: links } }];"
+        "assignments": {
+          "assignments": [
+            {
+              "id": "addendum",
+              "name": "research_addendum",
+              "value": "={{($json.output || $json.text || '').trim()}}",
+              "type": "string"
+            },
+            {
+              "id": "citations",
+              "name": "citations",
+              "value": "={{($json.output || $json.text || '').match(/https?:\\/\\/[^\\s)]+/g) || []}}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
       },
       "id": "79ec4c24-0313-4b10-bac0-f0c7b8b95b56",
       "name": "Parse Research Output",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         880,
         -224
@@ -219,27 +305,101 @@
     },
     {
       "parameters": {
-        "url": "={{$env.CONTEXT7_API_BASE || 'https://context7.local' }}/mcp/document/analyze",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {}
-          ]
+        "name": "brave_search",
+        "description": "Search the web using Brave Search API for current information and research",
+        "toolParameters": {
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query"
+            },
+            "count": {
+              "type": "number",
+              "description": "Number of results to return"
+            }
+          },
+          "required": ["query"]
+        },
+        "inputData": {
+          "query": "={{$json.project_name}} {{$json.research_scope}}",
+          "count": 10
         },
         "options": {}
       },
       "id": "0d0639e1-526e-47e8-b654-b2adb56f831a",
-      "name": "Context7 MCP - Document Analyzer",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
+      "name": "Brave Search Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1,
       "position": [
         1104,
+        -320
+      ]
+    },
+    {
+      "parameters": {
+        "name": "wikipedia_search",
+        "description": "Search Wikipedia for factual knowledge and references",
+        "toolParameters": {
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query for Wikipedia"
+            },
+            "limit": {
+              "type": "number",
+              "description": "Maximum number of results to return"
+            }
+          },
+          "required": ["query"]
+        },
+        "inputData": {
+          "query": "={{$json.project_name}}",
+          "limit": 5
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-e5f6-47e8-b654-b2adb56f831a",
+      "name": "Wikipedia Search Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "f1e2d3c4-b5a6-47e8-b654-b2adb56f831a",
+      "name": "Combine Research Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1328,
         -224
       ]
     },
     {
       "parameters": {
-        "text": "=You are a Reviewer Agent. Assess structure, clarity, tone, and consistency.\n\nINPUTS:\n- Draft + Research Addendum: {{$json.research_addendum || ''}}\n- Analyzer findings (JSON): {{$json.body || ''}}\n\nOUTPUT:\n- Return reviewer_notes (bulleted markdown) and highlight issues.\n- Keep it concise and actionable.",
+        "url": "=https://raw.githubusercontent.com/Capp3/n8n-research-bug/main/prompts/user-prompts/reviewer-qa.md",
+        "method": "GET",
+        "options": {}
+      },
+      "id": "fetch-reviewer-prompt",
+      "name": "Fetch Reviewer Prompt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1328,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "text": "=You are a professional document collaborator operating in a multi-agent workflow. Read the entire document before writing. Maintain the author's tone, improve clarity and structure, and strictly follow markdown best practices (heading hierarchy, concise paragraphs, meaningful bullets, tables when helpful). Work iteratively with focused changes. Ask concise clarifying questions only when necessary.\n\nBe deterministic and consistent. Prefer explicit, scannable outputs. Use mermaid diagrams only for brief plan visualizations when it significantly improves clarity.\n\n- Be deterministic; no rewriting, only guidance\n- Flag structure, tone consistency, citation sufficiency, completeness\n- Provide specific, actionable bullets\n\n{{$json.reviewer_qa_prompt || 'You are a Reviewer Agent. Assess structure, clarity, tone, and consistency.'}}",
         "options": {}
       },
       "id": "39984c5e-64aa-4a5a-a180-c4b824073459",
@@ -266,7 +426,22 @@
     },
     {
       "parameters": {
-        "text": "=You are the Editor Agent. Merge the current draft with Research Addendum and apply Reviewer Notes.\n\nINPUTS:\n- Current draft: {{$json.parsed_content || $json.output || ''}}\n- Research addendum: {{$json.research_addendum || ''}}\n- Reviewer notes: {{$json.reviewer_notes || ''}}\n\nGOAL:\n- Produce the final, complete markdown.\n- Maintain professional formatting, headings, and references.",
+        "url": "=https://raw.githubusercontent.com/Capp3/n8n-research-bug/main/prompts/user-prompts/editor-merge-final.md",
+        "method": "GET",
+        "options": {}
+      },
+      "id": "fetch-editor-merge-prompt",
+      "name": "Fetch Editor Merge Prompt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1904,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "text": "=You are a professional document collaborator operating in a multi-agent workflow. Read the entire document before writing. Maintain the author's tone, improve clarity and structure, and strictly follow markdown best practices (heading hierarchy, concise paragraphs, meaningful bullets, tables when helpful). Work iteratively with focused changes. Ask concise clarifying questions only when necessary.\n\nBe deterministic and consistent. Prefer explicit, scannable outputs. Use mermaid diagrams only for brief plan visualizations when it significantly improves clarity.\n\n- Integrate all parts into coherent final markdown\n- Ensure heading hierarchy, integrated citations, and consistent tone\n- Keep outputs deterministic and stable\n\n{{$json.editor_merge_prompt || 'You are the Editor Agent. Merge the current draft with Research Addendum and apply Reviewer Notes.'}}",
         "options": {}
       },
       "id": "3bcb1a6e-558e-4b19-9bcb-5471876d473c",
@@ -279,9 +454,14 @@
       ]
     },
     {
-      "parameters": {},
+      "parameters": {
+        "sessionIdType": "fromInput",
+        "sessionKey": "={{$json.conversation_id}}",
+        "contextWindowLength": 10,
+        "options": {}
+      },
       "id": "32adde15-63cf-4e9e-9c42-7dc0a31e0a9c",
-      "name": "Memory Buffer Window",
+      "name": "Chat Memory Buffer",
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1,
       "position": [
@@ -341,16 +521,65 @@
     },
     {
       "parameters": {
-        "functionCode": "// Store conversation mapping for Telegram lookup\n// In a real implementation, this would store to a database\n// For demo purposes, we'll use workflow memory\n\n// Store conversation mapping\nconst conversationData = {\n  conversation_id: $json.conversation_id,\n  project_name: $json.project_name,\n  github_owner: $json.github_owner,\n  github_repo: $json.github_repo,\n  research_scope: $json.research_scope,\n  created_at: $json.created_at,\n  workflow_state: 'active'\n};\n\n// In production, store this in Redis, database, or n8n's built-in storage\n// For now, we'll pass it through the workflow\n\nreturn [{\n  json: {\n    ...items[0].json,\n    conversation_stored: true,\n    ready_for_telegram: true\n  }\n}];"
+        "assignments": {
+          "assignments": [
+            {
+              "id": "stored",
+              "name": "conversation_stored",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "ready",
+              "name": "ready_for_telegram",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
       },
       "id": "4965134c-aadb-4a75-b280-b4d1b58b24be",
-      "name": "Store Conversation State",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
+      "name": "Mark Conversation Ready",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         2928,
         -320
       ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "conversation_id": "={{$json.conversation_id}}",
+            "project_name": "={{$json.project_name}}",
+            "github_owner": "={{$json.github_owner}}",
+            "github_repo": "={{$json.github_repo}}",
+            "research_scope": "={{$json.research_scope}}",
+            "created_at": "={{$json.created_at}}",
+            "workflow_state": "={{$json.workflow_state}}"
+          }
+        },
+        "table": "conversations",
+        "options": {}
+      },
+      "id": "chat-memory-storage",
+      "name": "Store Conversation in Chat DB",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        3152,
+        -320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chat-postgres-creds",
+          "name": "Chat PostgreSQL"
+        }
+      }
     },
     {
       "parameters": {
@@ -371,16 +600,53 @@
     },
     {
       "parameters": {
-        "functionCode": "// Conversation lookup and validation\nconst chatId = $json.message.chat.id;\nconst telegramMessage = $json.message.text;\n\n// In a real implementation, this would query a database\n// For demo purposes, we'll simulate a lookup\n// You would implement actual storage/retrieval here\n\n// Simulated conversation data (replace with actual database lookup)\nconst conversationData = {\n  conversation_id: 'demo-conversation-' + chatId,\n  project_name: 'demo-project',\n  github_owner: 'your-username',\n  github_repo: 'documents',\n  research_scope: 'comprehensive',\n  workflow_state: 'active'\n};\n\n// Error handling for unknown conversations\nif (!conversationData.project_name) {\n  return [{\n    json: {\n      error: 'conversation_not_found',\n      chat_id: chatId,\n      telegram_message: telegramMessage,\n      error_message: 'No active conversation found. Please start with form submission.'\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ...conversationData,\n    chat_id: chatId,\n    telegram_message: telegramMessage,\n    lookup_successful: true\n  }\n}];"
+        "assignments": {
+          "assignments": [
+            {
+              "id": "chat_id",
+              "name": "chat_id",
+              "value": "={{$json.message.chat.id}}",
+              "type": "number"
+            },
+            {
+              "id": "telegram_message",
+              "name": "telegram_message",
+              "value": "={{$json.message.text}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
       },
-      "id": "e1318ddc-171f-419d-8391-1d770dc2992b",
-      "name": "Conversation Lookup",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
+      "id": "extract-telegram-data",
+      "name": "Extract Telegram Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -1168,
         80
       ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT * FROM conversations WHERE workflow_state = 'active' ORDER BY created_at DESC LIMIT 1;",
+        "options": {}
+      },
+      "id": "e1318ddc-171f-419d-8391-1d770dc2992b",
+      "name": "Lookup Active Conversation",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        -944,
+        80
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "chat-postgres-creds",
+          "name": "Chat PostgreSQL"
+        }
+      }
     },
     {
       "parameters": {
@@ -400,7 +666,22 @@
     },
     {
       "parameters": {
-        "text": "=You are continuing a collaborative document editing and research session.\n\nCONTEXT:\n- This is an ongoing conversation about improving an existing document\n- Apply the operator's latest request while maintaining document integrity\n- Preserve existing structure unless specifically asked to change it\n- Ensure consistency with previous edits\n\nDocument Title: {{$json.project_name}}\nCurrent Document:\n---\n{{$json.data}}\n---\nLatest Request:\n{{$json.telegram_message}}\n\nDELIVERABLE:\nReturn the complete updated markdown document incorporating the requested changes. Maintain:\n1. Existing structure and formatting standards\n2. Professional tone and accessibility\n3. Logical organization\n4. Proper markdown formatting\n\nReturn ONLY the complete updated markdown document.",
+        "url": "=https://raw.githubusercontent.com/Capp3/n8n-research-bug/main/prompts/user-prompts/telegram-ongoing.md",
+        "method": "GET",
+        "options": {}
+      },
+      "id": "fetch-telegram-prompt",
+      "name": "Fetch Telegram Prompt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -720,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "text": "=You are a professional document collaborator operating in a multi-agent workflow. Read the entire document before writing. Maintain the author's tone, improve clarity and structure, and strictly follow markdown best practices (heading hierarchy, concise paragraphs, meaningful bullets, tables when helpful). Work iteratively with focused changes. Ask concise clarifying questions only when necessary.\n\nBe deterministic and consistent. Prefer explicit, scannable outputs. Use mermaid diagrams only for brief plan visualizations when it significantly improves clarity.\n\n- Emphasize small, targeted edits per turn\n- Ask up to 3 clarifying questions only when blockers exist\n- Include brief mermaid only for plan clarity\n\n{{$json.telegram_ongoing_prompt || 'You are continuing a collaborative document editing and research session.'}}",
         "options": {}
       },
       "id": "ad83e2c0-9d1f-40eb-9e2c-a24df8630f99",
@@ -503,6 +784,17 @@
       "main": [
         [
           {
+            "node": "Fetch Form Initial Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Form Initial Prompt": {
+      "main": [
+        [
+          {
             "node": "AI Agent - Initial Enhancement",
             "type": "main",
             "index": 0
@@ -519,7 +811,7 @@
             "index": 0
           },
           {
-            "node": "AI Agent - Research (Context7 Tools)",
+            "node": "AI Agent - Research (MCP Tools)",
             "type": "ai_memory",
             "index": 0
           },
@@ -589,14 +881,25 @@
       "main": [
         [
           {
-            "node": "AI Agent - Research (Context7 Tools)",
+            "node": "Fetch Research Prompt",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "AI Agent - Research (Context7 Tools)": {
+    "Fetch Research Prompt": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Research (MCP Tools)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Research (MCP Tools)": {
       "main": [
         [
           {
@@ -611,14 +914,52 @@
       "main": [
         [
           {
-            "node": "Context7 MCP - Document Analyzer",
+            "node": "Brave Search Tool",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wikipedia Search Tool",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Context7 MCP - Document Analyzer": {
+    "Brave Search MCP": {
+      "main": [
+        [
+          {
+            "node": "Combine MCP Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wikipedia MCP": {
+      "main": [
+        [
+          {
+            "node": "Combine MCP Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine MCP Results": {
+      "main": [
+        [
+          {
+            "node": "Fetch Reviewer Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Reviewer Prompt": {
       "main": [
         [
           {
@@ -641,6 +982,17 @@
       ]
     },
     "Parse Review Output": {
+      "main": [
+        [
+          {
+            "node": "Fetch Editor Merge Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Editor Merge Prompt": {
       "main": [
         [
           {
@@ -725,6 +1077,17 @@
       ]
     },
     "GitHub Read Current": {
+      "main": [
+        [
+          {
+            "node": "Fetch Telegram Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Telegram Prompt": {
       "main": [
         [
           {

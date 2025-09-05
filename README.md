@@ -19,7 +19,7 @@ This project implements a comprehensive document processing pipeline that combin
 - **Semantic Retrieval**: PostgreSQL with pgvector for context-aware research
 - **GitHub Integration**: Automated file creation and updates with version control
 - **Telegram Collaboration**: Ongoing document editing through chat interface
-- **Content Validation**: Context7 MCP analyzer for quality assurance
+- **Research Enhancement**: Specialized MCP servers for research and data retrieval
 - **Memory Persistence**: Conversation state management across sessions
 
 ## Quick Start
@@ -31,7 +31,7 @@ This project implements a comprehensive document processing pipeline that combin
 - GitHub repository with API access
 - PostgreSQL database with pgvector extension (or use `make docker-up`)
 - Telegram bot (for ongoing collaboration)
-- Context7 MCP endpoint (optional, for content validation)
+- MCP servers for research and data retrieval (configured via Docker)
 
 ### Environment Setup
 
@@ -155,7 +155,7 @@ The project includes a comprehensive Makefile with commands for all development 
 ### Prompt System
 - **[LLM Templates](docs/prompts/index.md)** - Available prompt templates
 - **[Schema Reference](docs/prompts/schema.md)** - Template and index schemas
-- **[Prompt Server](docs/implementation/prompt-server.md)** - HTTP API for prompt retrieval
+- **[Simplified Prompt System](prompts/README.md)** - Direct GitHub access with embedded system prompts
 
 ## Project Status
 
@@ -208,11 +208,16 @@ graph TD
     I --> J[Ongoing Chat Agent]
     J --> F
     
-    K[Prompt Server] --> B
+    K[GitHub Raw URLs] --> B
     K --> C
     K --> D
     K --> E
     K --> J
+    
+    C --> C1[Brave Search MCP]
+    C --> C2[Wikipedia MCP]
+    C --> C3[HTTP Request]
+    C1 & C2 & C3 --> C
 ```
 
 ## Contributing
