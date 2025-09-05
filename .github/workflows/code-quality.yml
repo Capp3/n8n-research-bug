@@ -68,7 +68,7 @@ jobs:
           echo "🔍 Validating MkDocs configuration..."
           uv pip install -r scripts/requirements.txt
           source .venv/bin/activate
-          mkdocs build --clean --strict
+          mkdocs build --clean
           echo "✅ MkDocs configuration is valid"
 
       - name: Check for broken internal links

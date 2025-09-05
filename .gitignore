@@ -413,3 +413,8 @@ site/
 
 .venv/
 venv/
+
+.python-version
+pyproject.toml
+uv.lock
+n8n-docs/
