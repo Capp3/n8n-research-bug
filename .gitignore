@@ -410,3 +410,6 @@ scratch.md
 site/
 
 .env
+
+.venv/
+venv/

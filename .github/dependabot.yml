@@ -8,8 +8,6 @@ updates:
       day: "monday"
       time: "09:00"
     open-pull-requests-limit: 10
-    reviewers:
-      - "Capp3"
     assignees:
       - "Capp3"
     commit-message:
@@ -19,30 +17,6 @@ updates:
       - "dependencies"
       - "python"
       - "uv"
-    ignore:
-      # Ignore major version updates for now
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
-
-  # Node.js dependencies (prompt-server)
-  - package-ecosystem: "npm"
-    directory: "/prompt-server"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-    open-pull-requests-limit: 5
-    reviewers:
-      - "Capp3"
-    assignees:
-      - "Capp3"
-    commit-message:
-      prefix: "deps"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "nodejs"
-      - "prompt-server"
     ignore:
       # Ignore major version updates for now
       - dependency-name: "*"
@@ -69,15 +43,13 @@ updates:
       - "ci"
 
   # Docker dependencies (if using Docker)
-  - package-ecosystem: "docker"
+  - package-ecosystem: "docker-compose"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "09:00"
     open-pull-requests-limit: 3
-    reviewers:
-      - "Capp3"
     assignees:
       - "Capp3"
     commit-message:
