@@ -85,7 +85,7 @@ Welcome to the comprehensive documentation for the n8n LLM Document Workflow - a
 ### For Developers
 1. Review **[Project Brief](projectbrief.md)** for project context
 2. Study the archived design decisions for reference
-3. Check **[Contributing](contributing/)** for development guidelines
+3. Check **[Contributing](contributing/index.md)** for development guidelines
 4. Use **[Testing](implementation/testing.md)** for validation procedures
 
 ### For Troubleshooting

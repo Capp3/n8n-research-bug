@@ -440,8 +440,8 @@ const testScenarios = [
 - [JSON Validator](https://jsonlint.com/)
 
 ### Examples
-- [Existing Templates](../prompts/)
-- [Test Data](../test-data/)
+- [Existing Templates](../prompts/index.md)
+- [Test Data](../test-data/index.md)
 - [Sample Documents](../test-data/sample-document.md)
 
 ## Getting Help

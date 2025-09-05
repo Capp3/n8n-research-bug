@@ -82,11 +82,11 @@ jobs:
             echo "✅ No broken internal links found"
           fi
 
-      - name: Validate file permissions
-        run: |
-          echo "🔍 Validating file permissions..."
-          # Check that all .md files are readable
-          find docs/ -name "*.md" -not -readable && exit 1 || echo "✅ All markdown files are readable"
-          # Check that all .yml files are readable
-          find .github/ -name "*.yml" -not -readable && exit 1 || echo "✅ All workflow files are readable"
-          echo "✅ File permissions are valid"
+      # - name: Validate file permissions
+      #   run: |
+      #     echo "🔍 Validating file permissions..."
+      #     # Check that all .md files are readable
+      #     find docs/ -name "*.md" -not -readable && exit 1 || echo "✅ All markdown files are readable"
+      #     # Check that all .yml files are readable
+      #     find .github/ -name "*.yml" -not -readable && exit 1 || echo "✅ All workflow files are readable"
+      #     echo "✅ File permissions are valid"

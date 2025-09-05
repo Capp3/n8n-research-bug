@@ -91,6 +91,6 @@ Common issues and solutions covering:
 ## Related Documentation
 
 - **[Project Brief](../projectbrief.md)** - Project overview and goals
-- **[Creative Documentation](../creative/)** - Design decisions and architecture
-- **[Archive](../archive/)** - Completed task documentation
-- **[Contributing](../contributing/)** - Contribution guidelines
+# - **[Creative Documentation](../creative/)** - Design decisions and architecture
+# - **[Archive](../archive/)** - Completed task documentation
+- **[Contributing](../contributing/index.md)** - Contribution guidelines

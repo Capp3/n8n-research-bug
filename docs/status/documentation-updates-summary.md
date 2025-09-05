@@ -8,9 +8,9 @@ Successfully updated all index files and MkDocs configuration to reflect the cur
 
 ### 1. Main Documentation Index (docs/index.md)
 **Updated**: Added missing sections to documentation structure
-- Added **[Status](status/)** - Project status and task tracking
-- Added **[Prompts](prompts/)** - LLM prompt templates and schema  
-- Added **[Test Data](test-data/)** - Sample documents and test templates
+- Added **[Status](../status/index.md)** - Project status and task tracking
+- Added **[Prompts](../prompts/index.md)** - LLM prompt templates and schema  
+- Added **[Test Data](../test-data/index.md)** - Sample documents and test templates
 
 ### 2. Status Index (docs/status/index.md)
 **Updated**: Cleaned up navigation
