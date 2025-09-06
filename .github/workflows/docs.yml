@@ -60,16 +60,16 @@ jobs:
       - name: Test MkDocs build
         run: |
           source .venv/bin/activate
-          mkdocs build --clean
+          mkdocs build --clean --strict
           echo "✅ MkDocs build test passed"
 
       - name: Test Mermaid functionality
         run: |
           source .venv/bin/activate
           # Test that Mermaid charts are properly rendered
-          mkdocs build --clean
+          mkdocs build --clean --strict
           # Check if Mermaid test page exists and builds
-          test -f site/mermaid-test/index.html
+          test -f site/archive/mermaid-test/index.html
           echo "✅ Mermaid functionality test passed"
 
       - name: Validate documentation structure
@@ -138,7 +138,7 @@ jobs:
       - name: Build with MkDocs
         run: |
           source .venv/bin/activate
-          mkdocs build --clean
+          mkdocs build --clean --strict
           echo "✅ MkDocs build completed successfully"
 
       - name: Upload artifact
