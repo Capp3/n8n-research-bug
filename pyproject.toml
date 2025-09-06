@@ -1,6 +1,6 @@
 [project]
 name = "n8n-research-bug"
-version = "0.1.0"
+version = "0.0.5"
 description = "Development Support for n8n Research bug"
 requires-python = ">=3.12"
 dependencies = [
