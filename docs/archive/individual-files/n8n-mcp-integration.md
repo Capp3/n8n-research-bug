@@ -132,17 +132,3 @@ When ready to implement:
 4. **Configure environment variables** in .env
 5. **Test the integration** with sample workflows
 
-## Related Documentation
-
-- [n8n-MCP Repository](https://github.com/czlonkowski/n8n-mcp) - Official project documentation
-- [Environment Setup](environment-setup.md) - Docker and environment configuration
-- [Chat Memory System](chat-memory.md) - PostgreSQL integration details
-- [Docker Compose Configuration](../compose.yml) - Complete service definitions
-
-## Support
-
-For issues related to n8n-MCP:
-
-- **GitHub Issues**: [n8n-mcp Issues](https://github.com/czlonkowski/n8n-mcp/issues)
-- **Documentation**: [n8n-mcp Documentation](https://www.n8n-mcp.com/)
-- **Community**: n8n community forums and Discord

@@ -1,7 +1,7 @@
 # n8n LLM Document Workflow Makefile
-# Complete development and deployment commands for the project
+# Streamlined development and deployment commands
 
-.PHONY: help install setup clean dev test docker docs serve-docs build-docs deploy-docs lint format prompt-server validate status
+.PHONY: help install setup clean dev test docker docs serve-docs build-docs deploy-docs lint validate status
 
 # Default target
 help:
@@ -26,12 +26,9 @@ help:
 	@echo "  validate-docs     - Validate documentation structure and links"
 	@echo ""
 	@echo "🔧 Development:"
-	@echo "  prompt-server     - Start the prompt server in development mode"
-	@echo "  test              - Run all tests (prompt-server + docs validation)"
-	@echo "  test-server       - Run prompt server tests only"
+	@echo "  test              - Run all tests (docs validation)"
 	@echo "  test-docs         - Test documentation build only"
 	@echo "  lint              - Run linting on all files"
-	@echo "  format            - Format code and configuration files"
 	@echo ""
 	@echo "📊 Project Management:"
 	@echo "  status            - Show current project status and task progress"
@@ -54,8 +51,6 @@ setup:
 	uv venv
 	@echo "Installing Python dependencies..."
 	uv pip install -r scripts/requirements.txt
-	@echo "Setting up prompt server dependencies..."
-	cd prompt-server && npm install
 	@echo "✅ Development environment setup complete!"
 
 # Clean all build artifacts
@@ -64,8 +59,7 @@ clean:
 	rm -rf site/
 	rm -rf .cache/
 	rm -rf docs/__pycache__/
-	rm -rf prompt-server/node_modules/.cache/
-	rm -rf prompt-server/coverage/
+	rm -rf .venv/
 	@echo "✅ Clean complete!"
 
 # Docker stack management
@@ -121,29 +115,23 @@ validate-docs:
 	@test -f docs/index.md && echo "✅ docs/index.md exists"
 	@test -f docs/projectbrief.md && echo "✅ docs/projectbrief.md exists"
 	@test -f docs/technical.md && echo "✅ docs/technical.md exists"
-	@test -d docs/creative && echo "✅ docs/creative/ directory exists"
 	@test -d docs/implementation && echo "✅ docs/implementation/ directory exists"
-	@test -d docs/support && echo "✅ docs/support/ directory exists"
+	@test -d docs/contributing && echo "✅ docs/contributing/ directory exists"
+	@test -d docs/status && echo "✅ docs/status/ directory exists"
+	@test -d docs/archive && echo "✅ docs/archive/ directory exists"
+	@test -d docs/prompts && echo "✅ docs/prompts/ directory exists"
+	@test -d docs/test-data && echo "✅ docs/test-data/ directory exists"
 	@test -f mkdocs.yml && echo "✅ mkdocs.yml exists"
 	@test -f scripts/requirements.txt && echo "✅ requirements.txt exists"
 	@echo "✅ Documentation validation complete!"
 
-# Prompt server commands
-prompt-server:
-	@echo "🔧 Starting prompt server in development mode..."
-	cd prompt-server && npm run dev
-
 # Testing commands
-test: test-server test-docs
+test: test-docs
 	@echo "✅ All tests completed!"
-
-test-server:
-	@echo "🧪 Running prompt server tests..."
-	cd prompt-server && npm test
 
 test-docs:
 	@echo "🧪 Testing documentation build..."
-	uvx mkdocs build --clean --strict
+	uvx mkdocs build --clean
 	@echo "✅ Documentation build test passed!"
 
 # Code quality commands
@@ -160,11 +148,6 @@ lint:
 	@test -f mkdocs.yml && echo "✅ mkdocs.yml exists"
 	@test -f scripts/requirements.txt && echo "✅ requirements.txt exists"
 	@echo "✅ Linting complete!"
-
-format:
-	@echo "🎨 Formatting code..."
-	cd prompt-server && npm run format 2>/dev/null || echo "No format script available"
-	@echo "✅ Formatting complete!"
 
 # Project status and validation
 status:
@@ -183,15 +166,15 @@ status:
 	@echo "📚 Documentation:"
 	@test -d site && echo "✅ Built documentation available" || echo "❌ Documentation not built"
 	@echo ""
-	@echo "🔧 Prompt Server:"
-	@test -d prompt-server/node_modules && echo "✅ Dependencies installed" || echo "❌ Dependencies not installed"
+	@echo "🔧 Python Environment:"
+	@test -d .venv && echo "✅ Virtual environment exists" || echo "❌ Virtual environment not created"
 
 validate:
 	@echo "🔍 Validating project structure..."
 	@test -f compose.yml && echo "✅ Docker compose file exists"
 	@test -f mkdocs.yml && echo "✅ MkDocs configuration exists"
 	@test -f prompts/index.json && echo "✅ Prompts index exists"
-	@test -f prompt-server/package.json && echo "✅ Prompt server package.json exists"
+	@test -f ResearchBug.json && echo "✅ n8n workflow exists"
 	@test -d .github/workflows && echo "✅ GitHub Actions workflows exist"
 	@echo "✅ Project structure validation complete!"
 

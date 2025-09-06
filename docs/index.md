@@ -135,7 +135,7 @@ Welcome to the comprehensive documentation for the n8n LLM Document Workflow - a
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our **[Contributing Guidelines](contributing/)** for:
+We welcome contributions! Please see our **[Contributing Guidelines](contributing/index.md)** for:
 - Code contribution guidelines
 - Prompt contribution guidelines
 - Documentation standards

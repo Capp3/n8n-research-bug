@@ -115,12 +115,6 @@ Successfully refactored workflow from custom implementation to n8n-native soluti
 - **API Documentation**: Comprehensive API documentation
 - **Troubleshooting**: Detailed troubleshooting guides
 
-## Archive References
-
-- **Original Implementation**: [n8n Patterns Refactoring Archive](../n8n-patterns-refactoring-20250128.md)
-- **Reflection Document**: [Reflection Analysis](../../reflection/2025-01-28/reflection-n8n-patterns-refactoring-20250128.md)
-- **Technical Details**: See individual archive files for specific implementation details
-
 ## Success Metrics
 
 - **Code Reduction**: 95% (626 lines → 0 lines)

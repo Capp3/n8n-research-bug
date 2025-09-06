@@ -321,10 +321,3 @@ The MCP servers are integrated into the n8n workflow through HTTP Request nodes:
 4. **Caching**: Consider caching frequently used search results to reduce API calls
 5. **Monitoring**: Regularly check MCP server logs for issues
 
-## References
-
-- [Model Context Protocol Documentation](https://modelcontextprotocol.io/)
-- [Brave Search API Documentation](https://brave.com/search/api/)
-- [Wikipedia API Documentation](https://www.mediawiki.org/wiki/API:Main_page)
-- [n8n-MCP GitHub Repository](https://github.com/czlonkowski/n8n-mcp)
-- [Docker Compose Documentation](https://docs.docker.com/compose/)

@@ -20,10 +20,8 @@ This section contains all implementation-related documentation for the n8n LLM D
 
 ### Chat Memory System
 - **[Chat Memory System](chat-memory.md)** - PostgreSQL chat memory documentation
-# - **[Chat Memory API](chat-memory-api.md)** - Complete API reference
 
 ### AI Integration
-# # - **[n8n-MCP Integration](n8n-mcp-integration.md)** - AI-powered n8n workflow builder
 
 ### Testing and Troubleshooting
 - **[Testing Guide](testing.md)** - Comprehensive testing procedures
@@ -91,6 +89,4 @@ Common issues and solutions covering:
 ## Related Documentation
 
 - **[Project Brief](../projectbrief.md)** - Project overview and goals
-# - **[Creative Documentation](../creative/)** - Design decisions and architecture
-# - **[Archive](../archive/)** - Completed task documentation
 - **[Contributing](../contributing/index.md)** - Contribution guidelines

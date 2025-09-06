@@ -117,10 +117,18 @@
     },
     {
       "parameters": {
+        "operation": "create",
         "owner": "={{$json.github_owner}}",
         "repository": "={{$json.github_repo}}",
-        "labels": [],
-        "assignees": []
+        "filePath": "documents/{{$json.project_name}}.md",
+        "fileContent": "={{$json.markdown_document}}",
+        "commitMessage": "Initial document: {{$json.project_name}}",
+        "additionalParameters": {
+          "author": {
+            "name": "n8n Research Bot",
+            "email": "bot@research.local"
+          }
+        }
       },
       "id": "c03d126e-3b22-4780-b5ba-d3840e4acc44",
       "name": "GitHub Create File",
@@ -149,7 +157,13 @@
     },
     {
       "parameters": {
+        "model": {
+          "model": "gpt-3.5-turbo",
+          "temperature": 0.7,
+          "maxTokens": 4000
+        },
         "text": "=You are a professional document collaborator operating in a multi-agent workflow. Read the entire document before writing. Maintain the author's tone, improve clarity and structure, and strictly follow markdown best practices (heading hierarchy, concise paragraphs, meaningful bullets, tables when helpful). Work iteratively with focused changes. Ask concise clarifying questions only when necessary.\n\nBe deterministic and consistent. Prefer explicit, scannable outputs. Use mermaid diagrams only for brief plan visualizations when it significantly improves clarity.\n\n- Emphasize small, targeted edits per turn\n- Ask up to 3 clarifying questions only when blockers exist\n- Include brief mermaid only for plan clarity\n\n{{$json.form_initial_prompt || 'You are starting a new collaborative document editing and research session.'}}\n\nDocument Title: {{$json.project_name}}\nInitial Document:\n---\n{{$json.markdown_document}}\n---\nResearch and Expansion Requirements:\n{{$json.submission_brief}}",
+        "tools": [],
         "options": {}
       },
       "id": "86aeb38e-60a5-49ce-98bf-1e699b429f5e",
@@ -200,6 +214,9 @@
     },
     {
       "parameters": {
+        "operation": "search",
+        "tableName": "documents",
+        "queryColumn": "embedding",
         "topK": 6,
         "options": {
           "metadata": {
@@ -261,7 +278,13 @@
     },
     {
       "parameters": {
+        "model": {
+          "model": "gpt-3.5-turbo",
+          "temperature": 0.7,
+          "maxTokens": 4000
+        },
         "text": "=You are a professional document collaborator operating in a multi-agent workflow. Read the entire document before writing. Maintain the author's tone, improve clarity and structure, and strictly follow markdown best practices (heading hierarchy, concise paragraphs, meaningful bullets, tables when helpful). Work iteratively with focused changes. Ask concise clarifying questions only when necessary.\n\nBe deterministic and consistent. Prefer explicit, scannable outputs. Use mermaid diagrams only for brief plan visualizations when it significantly improves clarity.\n\n- Use specialized tools for comprehensive research:\n  - brave_search: Web search and current information\n  - wikipedia_search: Factual knowledge and references\n- Cite official/primary sources; include inline links and a short References section\n- Prefer concise, scannable outputs; use tables for comparisons\n- Ask at most 2 clarifying questions if direction is ambiguous\n\n{{$json.research_addendum_prompt || 'You are a Research Agent with access to specialized tools.'}}",
+        "tools": [],
         "options": {},
         "hasOutputParser": true
       },
@@ -307,6 +330,10 @@
       "parameters": {
         "name": "brave_search",
         "description": "Search the web using Brave Search API for current information and research",
+        "url": "https://api.search.brave.com/res/v1/web/search",
+        "method": "GET",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "braveSearchApi",
         "toolParameters": {
           "properties": {
             "query": {
@@ -339,6 +366,9 @@
       "parameters": {
         "name": "wikipedia_search",
         "description": "Search Wikipedia for factual knowledge and references",
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary",
+        "method": "GET",
+        "authentication": "none",
         "toolParameters": {
           "properties": {
             "query": {
@@ -399,7 +429,13 @@
     },
     {
       "parameters": {
+        "model": {
+          "model": "gpt-3.5-turbo",
+          "temperature": 0.3,
+          "maxTokens": 3000
+        },
         "text": "=You are a professional document collaborator operating in a multi-agent workflow. Read the entire document before writing. Maintain the author's tone, improve clarity and structure, and strictly follow markdown best practices (heading hierarchy, concise paragraphs, meaningful bullets, tables when helpful). Work iteratively with focused changes. Ask concise clarifying questions only when necessary.\n\nBe deterministic and consistent. Prefer explicit, scannable outputs. Use mermaid diagrams only for brief plan visualizations when it significantly improves clarity.\n\n- Be deterministic; no rewriting, only guidance\n- Flag structure, tone consistency, citation sufficiency, completeness\n- Provide specific, actionable bullets\n\n{{$json.reviewer_qa_prompt || 'You are a Reviewer Agent. Assess structure, clarity, tone, and consistency.'}}",
+        "tools": [],
         "options": {}
       },
       "id": "39984c5e-64aa-4a5a-a180-c4b824073459",
@@ -441,7 +477,13 @@
     },
     {
       "parameters": {
+        "model": {
+          "model": "gpt-3.5-turbo",
+          "temperature": 0.5,
+          "maxTokens": 4000
+        },
         "text": "=You are a professional document collaborator operating in a multi-agent workflow. Read the entire document before writing. Maintain the author's tone, improve clarity and structure, and strictly follow markdown best practices (heading hierarchy, concise paragraphs, meaningful bullets, tables when helpful). Work iteratively with focused changes. Ask concise clarifying questions only when necessary.\n\nBe deterministic and consistent. Prefer explicit, scannable outputs. Use mermaid diagrams only for brief plan visualizations when it significantly improves clarity.\n\n- Integrate all parts into coherent final markdown\n- Ensure heading hierarchy, integrated citations, and consistent tone\n- Keep outputs deterministic and stable\n\n{{$json.editor_merge_prompt || 'You are the Editor Agent. Merge the current draft with Research Addendum and apply Reviewer Notes.'}}",
+        "tools": [],
         "options": {}
       },
       "id": "3bcb1a6e-558e-4b19-9bcb-5471876d473c",
@@ -507,7 +549,15 @@
         "operation": "edit",
         "owner": "={{$json.github_owner}}",
         "repository": "={{$json.github_repo}}",
-        "editFields": {}
+        "filePath": "documents/{{$json.project_name}}.md",
+        "fileContent": "={{$json.parsed_content}}",
+        "commitMessage": "Updated document: {{$json.project_name}} - AI enhanced",
+        "additionalParameters": {
+          "author": {
+            "name": "n8n Research Bot",
+            "email": "bot@research.local"
+          }
+        }
       },
       "id": "26b84e3d-9ec3-46b0-9a44-9d072424889c",
       "name": "GitHub Update - Initial",
@@ -652,7 +702,8 @@
       "parameters": {
         "operation": "get",
         "owner": "={{$json.github_owner}}",
-        "repository": "={{$json.github_repo}}"
+        "repository": "={{$json.github_repo}}",
+        "filePath": "documents/{{$json.project_name}}.md"
       },
       "id": "da9e5bac-302c-4ac5-99ab-8762637473b1",
       "name": "GitHub Read Current",
@@ -681,7 +732,13 @@
     },
     {
       "parameters": {
+        "model": {
+          "model": "gpt-3.5-turbo",
+          "temperature": 0.7,
+          "maxTokens": 3000
+        },
         "text": "=You are a professional document collaborator operating in a multi-agent workflow. Read the entire document before writing. Maintain the author's tone, improve clarity and structure, and strictly follow markdown best practices (heading hierarchy, concise paragraphs, meaningful bullets, tables when helpful). Work iteratively with focused changes. Ask concise clarifying questions only when necessary.\n\nBe deterministic and consistent. Prefer explicit, scannable outputs. Use mermaid diagrams only for brief plan visualizations when it significantly improves clarity.\n\n- Emphasize small, targeted edits per turn\n- Ask up to 3 clarifying questions only when blockers exist\n- Include brief mermaid only for plan clarity\n\n{{$json.telegram_ongoing_prompt || 'You are continuing a collaborative document editing and research session.'}}",
+        "tools": [],
         "options": {}
       },
       "id": "ad83e2c0-9d1f-40eb-9e2c-a24df8630f99",
@@ -711,7 +768,15 @@
         "operation": "edit",
         "owner": "={{$json.github_owner}}",
         "repository": "={{$json.github_repo}}",
-        "editFields": {}
+        "filePath": "documents/{{$json.project_name}}.md",
+        "fileContent": "={{$json.parsed_content}}",
+        "commitMessage": "Ongoing update: {{$json.change_description || 'Telegram chat update'}}",
+        "additionalParameters": {
+          "author": {
+            "name": "n8n Research Bot",
+            "email": "bot@research.local"
+          }
+        }
       },
       "id": "2e7c0002-0a90-4a6e-a6d2-c217c085adb9",
       "name": "GitHub Update - Ongoing",
@@ -811,7 +876,7 @@
             "index": 0
           },
           {
-            "node": "AI Agent - Research (MCP Tools)",
+            "node": "AI Agent - Research (Tools)",
             "type": "ai_memory",
             "index": 0
           },

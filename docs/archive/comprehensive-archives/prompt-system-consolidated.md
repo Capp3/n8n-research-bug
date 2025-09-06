@@ -120,11 +120,6 @@ Successfully eliminated complex 626-line Node.js prompt-server application and i
 - **Maintainability**: Continued focus on maintainability
 - **Reliability**: Ongoing reliability improvements
 
-## Archive References
-
-- **Original Implementation**: [Prompt System Simplification Archive](../prompt-system-simplification-20250128.md)
-- **Reflection Document**: [Reflection Analysis](../../reflection/2025-01-28/reflection-prompt-simplification-20250128.md)
-- **Technical Details**: See individual archive files for specific implementation details
 
 ## Success Metrics
 

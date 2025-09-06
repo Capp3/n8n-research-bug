@@ -86,44 +86,6 @@ The current MkDocs navigation and content presentation has several UX issues:
 - **Prompt System Simplification (2025-01-28)**: 95% complexity reduction
 - **MCP Server Refactoring (2025-01-28)**: Research-focused integration
 
-## Consolidated Archives
-- [n8n Refactoring Consolidated](./comprehensive-archives/n8n-refactoring-consolidated.md)
-- [Prompt System Consolidated](./comprehensive-archives/prompt-system-consolidated.md)
-- [MCP Integration Consolidated](./comprehensive-archives/mcp-integration-consolidated.md)
-
-## Individual Archives
-[Link to individual-files/ directory for unique content]
-```
-
-#### Reflection Digest (`docs/reflection/index.md`):
-```markdown
-# Reflection Digest
-
-## Recent Reflections (2025-01-28)
-- [n8n Patterns Refactoring](./2025-01-28/n8n-patterns-refactoring.md)
-- [Prompt Simplification](./2025-01-28/prompt-simplification.md)
-- [MCP Refactoring](./2025-01-28/mcp-refactoring.md)
-
-## Consolidated Insights
-- [Key Learnings](./consolidated-insights.md)
-- [Process Improvements](./consolidated-insights.md#process-improvements)
-- [Technical Decisions](./consolidated-insights.md#technical-decisions)
-```
-
-#### Creative Digest (`docs/creative/index.md`):
-```markdown
-# Creative Process Digest
-
-## Design Decisions
-- [Architecture Decisions](./design-decisions-consolidated.md#architecture)
-- [UI/UX Decisions](./design-decisions-consolidated.md#uiux)
-- [Algorithm Decisions](./design-decisions-consolidated.md#algorithms)
-
-## Process Documentation
-- [Creative Phase Process](./process-documentation-consolidated.md)
-- [Design Rationale](./process-documentation-consolidated.md#rationale)
-- [Implementation Guidelines](./process-documentation-consolidated.md#guidelines)
-```
 
 ### Navigation Structure:
 ```yaml

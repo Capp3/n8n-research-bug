@@ -329,4 +329,3 @@ DEBUG=chat-memory:*
 
 - [Environment Setup](environment-setup.md) - Configuration guide
 - [Implementation Summary](../status/postgresql-chat-memory-implementation-summary.md) - Technical details
-# # - [API Reference](../api/chat-memory-api.md) - Complete API documentation
