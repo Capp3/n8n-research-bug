@@ -2,66 +2,47 @@
 # Streamlined for Python, Node.js, Docker, and documentation projects
 
 # =============================================================================
-# OPERATING SYSTEM FILES
+# PYTHON CORE
 # =============================================================================
 
-# macOS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
-
-# Linux
-*~
-.fuse_hidden*
-.directory
-.Trash-*
-
-# =============================================================================
-# DEVELOPMENT ENVIRONMENTS
-# =============================================================================
-
-# VS Code
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-*.code-workspace
-
-# Cursor AI
-.cursor/
-
-# JetBrains IDEs
-.idea/
-*.iml
-*.ipr
-*.iws
-
-# =============================================================================
-# PYTHON
-# =============================================================================
-
-# Virtual environments
-.venv/
-venv/
-env/
-ENV/
-
-# Python cache
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[cod]
+*.py[codz]
 *$py.class
+
+# C extensions
 *.so
+
+# =============================================================================
+# PACKAGE MANAGEMENT & DEPENDENCIES
+# =============================================================================
+
+# UV (package manager)
+uv.lock
+
+# pipenv
+#Pipfile.lock
+
+# poetry
+#poetry.lock
+#poetry.toml
+
+# pdm
+#pdm.lock
+#pdm.toml
+.pdm-python
+.pdm-build/
+
+# pixi
+#pixi.lock
+.pixi
+
+# PEP 582
+__pypackages__/
+
+# =============================================================================
+# BUILD & DISTRIBUTION
+# =============================================================================
 
 # Distribution / packaging
 .Python
@@ -77,123 +58,256 @@ parts/
 sdist/
 var/
 wheels/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
 # PyInstaller
 *.manifest
 *.spec
 
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# PyBuilder
+.pybuilder/
+target/
+
+# =============================================================================
+# TESTING & COVERAGE
+# =============================================================================
+
 # Unit test / coverage reports
 htmlcov/
 .tox/
+.nox/
 .coverage
 .coverage.*
 .cache
 nosetests.xml
 coverage.xml
 *.cover
+*.py.cover
 .hypothesis/
 .pytest_cache/
+cover/
 
-# Jupyter Notebook
-.ipynb_checkpoints
+# =============================================================================
+# VIRTUAL ENVIRONMENTS
+# =============================================================================
+
+# Python virtual environments
+.env
+.envrc
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
 # pyenv
 .python-version
 
-# pipenv
-Pipfile.lock
-
-# uv
-uv.lock
-
 # =============================================================================
-# NODE.JS
+# DEVELOPMENT TOOLS & IDEs
 # =============================================================================
 
-# Dependencies
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Traditional IDEs
+# PyCharm / IntelliJ
+#.idea/
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
+# Visual Studio Code
+#.vscode/
 
-# Coverage directory used by tools like istanbul
-coverage/
+# Spyder
+.spyderproject
+.spyproject
+
+# Rope
+.ropeproject
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim/Neovim
+*.swp
+*.swo
+*~
+.vimrc.local
+.nvimrc.local
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
 
 # =============================================================================
-# DOCKER
+# AI-POWERED DEVELOPMENT TOOLS
 # =============================================================================
 
-# Docker volumes and data
-docker-data/
+# Cursor AI
+.cursor/
+
+# Windsurf AI
+.windsurf/
+.windsurf_cache/
+windsurf.log
+
+# Claude Code / Anthropic
+.claude/
+.claude_cache/
+claude.log
+
+# GitHub Copilot
+.copilot/
+
+# Tabnine
+.tabnine/
+tabnine.log
+
+# Codeium
+.codeium/
+.codeium_cache/
+
+# Amazon CodeWhisperer
+.codewhisperer/
+.codewhisperer_cache/
+
+# Replit Ghostwriter
+.replit/
+.replit_cache/
+
+# Continue AI
+.continue/
+continue.log
+
+# Aider
+.aider/
+aider.log
+
+# CodeT5 / Salesforce
+.codet5/
+.codet5_cache/
+
+# DeepCode / Snyk Code
+.deepcode/
+.snyk/
+
+# Kite
+.kite/
+kite.log
+
+# IntelliCode
+.intellicode/
+.intellicode_cache/
+
+# AI Code Assistants (Generic)
+.ai_assistant/
+.ai_cache/
+ai_workspace/
+
+# =============================================================================
+# TYPE CHECKING & LINTING
+# =============================================================================
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Ruff linter
+.ruff_cache/
 
 # =============================================================================
 # DOCUMENTATION
 # =============================================================================
 
-# MkDocs build output
-site/
+# Sphinx documentation
+docs/_build/
+
+# mkdocs documentation
+/site
 
 # =============================================================================
-# PROJECT SPECIFIC
+# FRAMEWORK-SPECIFIC
 # =============================================================================
 
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
 
-# Project-specific directories
+# Flask
+instance/
+.webassets-cache
+
+# Scrapy
+.scrapy
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# =============================================================================
+# JUPYTER & NOTEBOOKS
+# =============================================================================
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# =============================================================================
+# SPECIALIZED TOOLS
+# =============================================================================
+
+# SageMath
+*.sage.py
+
+# Cython
+cython_debug/
+
+# Translations
+*.mo
+*.pot
+
+# PyPI configuration
+.pypirc
+
+# Marimo
+marimo/_static/
+marimo/_lsp/
+__marimo__/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Abstra
+.abstra/
+
+# =============================================================================
+# PROJECT-SPECIFIC
+# =============================================================================
+
+# Custom development modes and optimization documentation
 custom_modes/
 optimization-journey/
-n8n-docs/
-
-# Temporary files
-*.tmp
-*.temp
-scratch.md
-
-# Logs
-*.log
-logs/
-
-bug_temp.json
-
-# =============================================================================
-# BACKUP AND TEMPORARY FILES
-# =============================================================================
-
-# Backup files
-*.bak
-*.backup
-*~
-
-# Temporary files
-*.swp
-*.swo
-*~
-
-# =============================================================================
-# NOTES
-# =============================================================================
-
-# This .gitignore is streamlined for:
-# - Python projects (using uv for dependency management)
-# - Node.js projects (if any)
-# - Docker containers
-# - MkDocs documentation
-# - VS Code and Cursor AI development
-# - Cross-platform development (macOS, Windows, Linux)
-#
-# Removed excessive Visual Studio/.NET content that was not relevant
-# to this n8n LLM Document Workflow project.

@@ -1,12 +1,14 @@
 [project]
 name = "n8n-research-bug"
-version = "0.0.5"
+version = "0.0.6"
 description = "Development Support for n8n Research bug"
 requires-python = ">=3.12"
+
 dependencies = [
     "mkdocs>=1.6.1",
     "mkdocs-mermaid2-plugin>=1.2.2",
     "n8n-lint>=1.1.2",
+    "n8n-workflow-builder>=0.2.0",
 ]
 
 [project.optional-dependencies]

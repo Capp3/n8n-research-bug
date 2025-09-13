@@ -52,15 +52,6 @@ graph TD
     
     %% Feedback Loop
     Chat --> Memory
-    
-    style User fill:#e1f5fe
-    style Form fill:#f3e5f5
-    style Editor fill:#e8f5e8
-    style Research fill:#fff3e0
-    style Reviewer fill:#fce4ec
-    style Merge fill:#e0f2f1
-    style Memory fill:#f1f8e9
-    style Chat fill:#e3f2fd
 ```
 
 ## n8n Workflow Requirements
