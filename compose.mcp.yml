@@ -1,0 +1,186 @@
+services:
+  # Brave Search MCP Server - Web search capabilities
+  mcp-brave-search:
+    image: mcp/brave-search:latest
+    restart: unless-stopped
+    container_name: mcp-brave-search
+    networks:
+      - support_network
+    ports:
+      - ${BRAVE_SEARCH_PORT:-3002}:8080
+    environment:
+      BRAVE_API_KEY: ${BRAVE_API_KEY}
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/mcp"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # Wikipedia MCP Server - Knowledge base access (stdio mode)
+  mcp-wikipedia:
+    image: mcp/wikipedia-mcp:latest
+    restart: unless-stopped
+    container_name: mcp-wikipedia
+    networks:
+      - support_network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  # Firecrawl MCP Server - Advanced web scraping (stdio mode)
+  mcp-firecrawl:
+    image: mcp/firecrawl:latest
+    restart: unless-stopped
+    container_name: mcp-firecrawl
+    networks:
+      - support_network
+    environment:
+      FIRECRAWL_API_KEY: ${FIRECRAWL_API_KEY}
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  # Puppeteer MCP Server - Browser automation (stdio mode)
+  mcp-puppeteer:
+    image: mcp/puppeteer:latest
+    restart: unless-stopped
+    container_name: mcp-puppeteer
+    networks:
+      - support_network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  # Time MCP Server - Time and timezone operations (stdio mode)
+  mcp-time:
+    image: mcp/time:latest
+    restart: unless-stopped
+    container_name: mcp-time
+    networks:
+      - support_network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+
+  # Sequential Thinking MCP Server - Problem-solving assistance (stdio mode)
+  mcp-sequential-thinking:
+    image: mcp/sequentialthinking:latest
+    restart: unless-stopped
+    container_name: mcp-sequential-thinking
+    networks:
+      - support_network
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+
+  # n8n-MCP Server - AI-powered n8n workflow builder
+  n8n-mcp:
+    image: ghcr.io/czlonkowski/n8n-mcp:latest
+    restart: unless-stopped
+    container_name: n8n-mcp
+    depends_on:
+      n8n-postgres:
+        condition: service_healthy # Wait for PostgreSQL to be ready
+    networks:
+      - support_network
+    ports:
+      - ${N8N_MCP_PORT:-3001}:3001 # Default: localhost:3001
+    environment:
+      # Database connection
+      DATABASE_URL: postgresql://${SUPPORT_POSTGRES_USER:-support-user}:${SUPPORT_POSTGRES_PASSWORD:-support-password}@n8n-postgres:5432/${SUPPORT_POSTGRES_DB:-support}
+      # MCP Server configuration
+      MCP_SERVER_PORT: ${N8N_MCP_PORT:-3001}
+      MCP_SERVER_HOST: ${N8N_MCP_HOST:-0.0.0.0}
+      # n8n API configuration
+      N8N_API_URL: ${N8N_API_URL:-http://n8n:5678}
+      N8N_API_KEY: ${N8N_API_KEY}
+      # Optional: n8n docs path for enhanced node information
+      N8N_DOCS_PATH: ${N8N_DOCS_PATH:-/app/n8n-docs}UV
+
+      # Logging and debug
+      LOG_LEVEL: ${N8N_MCP_LOG_LEVEL:-info}
+      DEBUG: ${N8N_MCP_DEBUG:-false}
+    volumes:
+      # Optional: Mount n8n docs for enhanced functionality
+      - ${N8N_DOCS_PATH:-./n8n-docs}:/app/n8n-docs:ro
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    healthcheck:
+      interval: 30s
+      retries: 5
+      start_period: 30s
+      test: ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
+      timeout: 10s
+
+  # =============================================================================
+  # FUTURE SERVICES (Commented Out - Enable as needed)
+  # =============================================================================
+
+  # Slack MCP Server - Team communication integration
+  # mcp-slack:
+  #   image: mcp/slack:latest
+  #   restart: unless-stopped
+  #   container_name: mcp-slack
+  #   networks:
+  #     - support_network
+  #   ports:
+  #     - ${SLACK_PORT:-3008}:3000
+  #   environment:
+  #     SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+  #     SLACK_APP_TOKEN: ${SLACK_APP_TOKEN}
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: "0.5"
+  #         memory: 512M
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 20s
+
+  # Telegram MCP Server - Personal communication integration
+  # mcp-telegram:
+  #   image: mcp/telegram:latest
+  #   restart: unless-stopped
+  #   container_name: mcp-telegram
+  #   networks:
+  #     - support_network
+  #   ports:
+  #     - ${TELEGRAM_PORT:-3009}:3000
+  #   environment:
+  #     TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: "0.5"
+  #         memory: 512M
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 20s

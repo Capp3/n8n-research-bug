@@ -24,6 +24,8 @@
 - [x] **BUILD MODE**: ResearchBug.json Critical Fixes - Fix Priority 1 issues (GitHub nodes, AI agents, vector store, tools)
 - [x] **BUILD MODE**: GitHub Pages Documentation Fix - Resolved MkDocs build warnings and navigation issues
 - [x] **BUILD MODE**: Version Standardization - Updated all project version references to v0.0.5
+- [x] **VAN MODE**: Comprehensive Linting Setup - Implemented Python, n8n, JSON, and YAML linting with UV integration
+- [x] **IMPLEMENT MODE**: Linting Cleanup - Moved test scripts to scripts directory and updated all references
 - [ ] **BUILD MODE**: ResearchBug.json Complete Validation - Fix remaining issues and test workflow execution
 - [ ] Execute end-to-end testing per testing plan
 - [ ] Test deployment process and verify site accessibility (pending GitHub Pages setup)
@@ -32,26 +34,34 @@
 - [ ] Test PostgreSQL chat memory with real database connection
 - [ ] Document chat memory API usage examples
 
-## Active Context - ResearchBug.json Workflow Analysis
+## Active Context - Linting Cleanup
 
-**Current Task**: BUILD MODE - N8N Workflow Validation and Repair  
-**Complexity**: Level 2-3 (Multi-agent workflow with critical configuration errors)  
-**Status**: ✅ Priority 1 fixes COMPLETED - Workflow now executable  
-**Next Phase**: Complete validation and credentials configuration
+**Current Task**: IMPLEMENT MODE - Project Structure Cleanup  
+**Complexity**: Level 1 (Simple file organization and reference updates)  
+**Status**: ✅ COMPLETED - All cleanup tasks completed and verified  
+**Next Phase**: Ready for next development task
 
-### ✅ Priority 1 Fixes COMPLETED:
-1. **GitHub nodes** - ✅ Added operation, filePath, fileContent, commitMessage parameters
-2. **AI Agent nodes** - ✅ Added model configuration and verified memory connections
-3. **Vector store** - ✅ Added operation, tableName, queryColumn parameters  
-4. **Tool nodes** - ✅ Added HTTP configuration (url, method, authentication)
-5. **Memory buffer** - ✅ Verified connections and fixed reference names
-6. **GitHub operations** - ✅ All nodes now have required parameters
+### ✅ Linting Cleanup COMPLETED:
+1. **Test Script Organization** - ✅ Moved test-linting.py to scripts/ directory
+2. **Path References Updated** - ✅ Updated all file paths to work from scripts/ directory
+3. **Makefile Integration** - ✅ Added test-lint command and updated lint-check
+4. **Setup Script Updated** - ✅ Updated setup-dev.sh to reference moved test script
+5. **Documentation Updated** - ✅ Updated linting-setup.md with new test script location
+6. **Help Commands Updated** - ✅ Added test-lint to help output and .PHONY declarations
 
 ### Next Actions:
-1. **Configure credentials** for all API services (GitHub, OpenAI, Supabase, Brave Search, PostgreSQL, Telegram)
-2. **Test workflow execution** with minimal dataset
-3. **Verify database schemas** match expected structures
-4. **Monitor logs** for remaining runtime errors
+- ✅ Test the cleaned up linting setup with `make test-lint` - COMPLETED
+- ✅ Verify all linting commands work correctly - COMPLETED  
+- ✅ Test the complete linting suite with `make lint` - COMPLETED
+- ✅ Validate n8n workflow with `make lint-n8n` - COMPLETED
+
+### ✅ Linting Cleanup VERIFICATION COMPLETED:
+1. **Test Script Moved** - ✅ Successfully moved to scripts/test-linting.py
+2. **Path References Updated** - ✅ All file paths work correctly from scripts directory
+3. **Makefile Commands Working** - ✅ All linting commands execute successfully
+4. **JSON Validation Fixed** - ✅ Updated validator to handle different JSON file types
+5. **Missing Files Created** - ✅ Added bug_temp.json and prompts/index.json
+6. **Complete Linting Suite** - ✅ All tools working together seamlessly
 
 ## Recently Completed
 

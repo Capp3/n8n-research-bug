@@ -1,0 +1,10 @@
+{
+  "name": "Prompts Index",
+  "description": "Index of all prompts used in the n8n workflow",
+  "version": "0.0.5",
+  "prompts": {
+    "system": "System prompts for AI agents",
+    "user": "User prompt templates",
+    "workflow": "Workflow-specific prompts"
+  }
+}

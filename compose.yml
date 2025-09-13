@@ -24,6 +24,9 @@
 # Environment variables in .env file control ports and credentials
 name: researchbug-support
 
+include:
+  - compose.mcp.yml
+
 # Network for service communication
 networks:
   support_network:
@@ -31,23 +34,24 @@ networks:
 
 # Persistent data volumes
 volumes:
-  n8n-redis:      # Redis data persistence
-  n8n-postgres:   # PostgreSQL data persistence
-  chat-postgres:  # Chat memory PostgreSQL data persistence
-  nocodb-data:    # NocoDB data persistence
-  nocodb-postgres: # NocoDB PostgreSQL data persistence
+  support-redis: # Redis data persistence
+  support-postgres: # PostgreSQL data persistence
+  support-postgres-chat: # Chat memory PostgreSQL data persistence
+  support-nocodb-data: # NocoDB data persistence
+  support-nocodb-postgres: # NocoDB PostgreSQL data persistence
+
 services:
   # Redis - Cache and session storage
-  n8n-redis:
-    container_name: n8n-redis
+  support-redis:
+    container_name: support-redis
     image: redis:bookworm
     networks:
       - support_network
     restart: unless-stopped
     ports:
-      - ${SUPPORT_REDIS_PORT:-6379}:6379  # Default: localhost:6379
+      - ${SUPPORT_REDIS_PORT:-6379}:6379 # Default: localhost:6379
     volumes:
-      - n8n-redis:/data  # Persistent cache data
+      - support-redis:/data # Persistent cache data
     deploy:
       resources:
         limits:
@@ -64,14 +68,14 @@ services:
       timeout: 3s
 
   # PostgreSQL with pgvector extension - Vector database for semantic search
-  n8n-pgvector:
-    container_name: n8n-pgvector
+  support-pgvector:
+    container_name: support-pgvector
     image: pgvector/pgvector:pg17-bookworm
     volumes:
-      - n8n-postgres:/var/lib/postgresql/data  # Shared data with main PostgreSQL
+      - support-postgres:/var/lib/postgresql/data # Shared data with main PostgreSQL
     depends_on:
-      n8n-postgres:
-        condition: service_healthy  # Wait for main PostgreSQL to be ready
+      support-postgres:
+        condition: service_healthy # Wait for main PostgreSQL to be ready
     environment:
       POSTGRES_PASSWORD: ${SUPPORT_POSTGRES_PASSWORD:-support-password}
       POSTGRES_USER: ${SUPPORT_POSTGRES_USER:-support-user}
@@ -95,13 +99,13 @@ services:
       timeout: 5s
 
   # Main PostgreSQL database - Application data with pgvector support
-  n8n-postgres:
+  support-postgres:
     image: postgres:17-bookworm
     restart: unless-stopped
-    container_name: n8n-postgres
-    shm_size: 128mb  # Shared memory for PostgreSQL performance
+    container_name: support-postgres
+    shm_size: 128mb # Shared memory for PostgreSQL performance
     volumes:
-      - n8n-postgres:/var/lib/postgresql/data  # Persistent database storage
+      - support-postgres:/var/lib/postgresql/data # Persistent database storage
     environment:
       POSTGRES_PASSWORD: ${SUPPORT_POSTGRES_PASSWORD:-support-password}
       POSTGRES_USER: ${SUPPORT_POSTGRES_USER:-support-user}
@@ -109,7 +113,7 @@ services:
     networks:
       - support_network
     ports:
-      - ${SUPPORT_POSTGRES_PORT:-5432}:5432  # Default: localhost:5432
+      - ${SUPPORT_POSTGRES_PORT:-5432}:5432 # Default: localhost:5432
     deploy:
       resources:
         limits:
@@ -122,25 +126,29 @@ services:
       interval: 30s
       retries: 5
       start_period: 20s
-      test: ["CMD-SHELL", "pg_isready -d ${SUPPORT_POSTGRES_DB} -U ${SUPPORT_POSTGRES_USER}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -d ${SUPPORT_POSTGRES_DB} -U ${SUPPORT_POSTGRES_USER}",
+        ]
       timeout: 5s
 
   # Chat Memory PostgreSQL database - Dedicated for conversation storage
-  chat-postgres:
+  support-postgres-chat:
     image: postgres:17-bookworm
     restart: unless-stopped
-    container_name: chat-postgres
-    shm_size: 64mb  # Smaller shared memory for chat storage
+    container_name: support-postgres-chat
+    shm_size: 64mb # Smaller shared memory for chat storage
     volumes:
-      - chat-postgres:/var/lib/postgresql/data  # Persistent chat memory storage
+      - support-postgres-chat:/var/lib/postgresql/data # Persistent chat memory storage
     environment:
-      POSTGRES_PASSWORD: ${CHAT_POSTGRES_PASSWORD:-chat-password}
-      POSTGRES_USER: ${CHAT_POSTGRES_USER:-chat-user}
-      POSTGRES_DB: ${CHAT_POSTGRES_DB:-chat_memory}
+      POSTGRES_PASSWORD: ${SUPPORT_POSTGRES_CHAT_PASSWORD:-chat-password}
+      POSTGRES_USER: ${SUPPORT_POSTGRES_CHAT_USER:-chat-user}
+      POSTGRES_DB: ${SUPPORT_POSTGRES_CHAT_DB:-chat_memory}
     networks:
       - support_network
     ports:
-      - ${CHAT_POSTGRES_PORT:-5433}:5432  # Different port to avoid conflicts
+      - ${SUPPORT_POSTGRES_CHAT_PORT:-5433}:5432 # Different port to avoid conflicts
     deploy:
       resources:
         limits:
@@ -153,21 +161,25 @@ services:
       interval: 30s
       retries: 5
       start_period: 20s
-      test: ["CMD-SHELL", "pg_isready -d ${CHAT_POSTGRES_DB} -U ${CHAT_POSTGRES_USER}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -d ${SUPPORT_POSTGRES_CHAT_DB} -U ${SUPPORT_POSTGRES_CHAT_USER}",
+        ]
       timeout: 5s
 
   # Adminer - Web-based database management interface
-  adminer:
-    image: adminer
+  support_adminer:
+    image: support_adminer
     restart: unless-stopped
-    container_name: n8n-adminer
+    container_name: support_adminer
     depends_on:
       n8n-postgres:
-        condition: service_healthy  # Wait for PostgreSQL to be ready
+        condition: service_healthy # Wait for PostgreSQL to be ready
     networks:
       - support_network
     ports:
-      - ${SUPPORT_ADMINER_PORT:-8080}:8080  # Default: localhost:8080
+      - ${SUPPORT_ADMINER_PORT:-8080}:8080 # Default: localhost:8080
     deploy:
       resources:
         limits:
@@ -180,96 +192,6 @@ services:
       test: ["CMD-SHELL", "curl -f http://localhost:8080 || exit 1"]
       timeout: 5s
 
-  # Brave Search MCP Server - Web search capabilities
-  mcp-brave-search:
-    image: mcp/brave-search:latest
-    restart: unless-stopped
-    container_name: mcp-brave-search
-    networks:
-      - support_network
-    ports:
-      - ${BRAVE_SEARCH_PORT:-3002}:8080
-    environment:
-      BRAVE_API_KEY: ${BRAVE_API_KEY}
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/mcp"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
-
-  # Wikipedia MCP Server - Knowledge base access (stdio mode)
-  mcp-wikipedia:
-    image: mcp/wikipedia-mcp:latest
-    restart: unless-stopped
-    container_name: mcp-wikipedia
-    networks:
-      - support_network
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-
-  # Firecrawl MCP Server - Advanced web scraping (stdio mode)
-  mcp-firecrawl:
-    image: mcp/firecrawl:latest
-    restart: unless-stopped
-    container_name: mcp-firecrawl
-    networks:
-      - support_network
-    environment:
-      FIRECRAWL_API_KEY: ${FIRECRAWL_API_KEY}
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-
-  # Puppeteer MCP Server - Browser automation (stdio mode)
-  mcp-puppeteer:
-    image: mcp/puppeteer:latest
-    restart: unless-stopped
-    container_name: mcp-puppeteer
-    networks:
-      - support_network
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-
-  # Time MCP Server - Time and timezone operations (stdio mode)
-  mcp-time:
-    image: mcp/time:latest
-    restart: unless-stopped
-    container_name: mcp-time
-    networks:
-      - support_network
-    deploy:
-      resources:
-        limits:
-          cpus: "0.25"
-          memory: 256M
-
-  # Sequential Thinking MCP Server - Problem-solving assistance (stdio mode)
-  mcp-sequential-thinking:
-    image: mcp/sequentialthinking:latest
-    restart: unless-stopped
-    container_name: mcp-sequential-thinking
-    networks:
-      - support_network
-    deploy:
-      resources:
-        limits:
-          cpus: "1.0"
-          memory: 1G
-
   # NocoDB PostgreSQL Database - Dedicated database for NocoDB
   nocodb-postgres:
     image: postgres:17-bookworm
@@ -277,7 +199,7 @@ services:
     container_name: nocodb-postgres
     shm_size: 128mb
     volumes:
-      - nocodb-postgres:/var/lib/postgresql/data  # Persistent chat memory storage
+      - nocodb-postgres:/var/lib/postgresql/data # Persistent chat memory storage
     environment:
       POSTGRES_PASSWORD: ${NOCODB_POSTGRES_PASSWORD:-nocodb-password}
       POSTGRES_USER: ${NOCODB_POSTGRES_USER:-nocodb-user}
@@ -298,7 +220,11 @@ services:
       interval: 30s
       retries: 5
       start_period: 20s
-      test: ["CMD-SHELL", "pg_isready -d ${NOCODB_POSTGRES_DB} -U ${NOCODB_POSTGRES_USER}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -d ${NOCODB_POSTGRES_DB} -U ${NOCODB_POSTGRES_USER}",
+        ]
       timeout: 5s
 
   # NocoDB - Database management and API
@@ -326,99 +252,3 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-
-  # n8n-MCP Server - AI-powered n8n workflow builder
-  n8n-mcp:
-    image: ghcr.io/czlonkowski/n8n-mcp:latest
-    restart: unless-stopped
-    container_name: n8n-mcp
-    depends_on:
-      n8n-postgres:
-        condition: service_healthy  # Wait for PostgreSQL to be ready
-    networks:
-      - support_network
-    ports:
-      - ${N8N_MCP_PORT:-3001}:3001  # Default: localhost:3001
-    environment:
-      # Database connection
-      DATABASE_URL: postgresql://${SUPPORT_POSTGRES_USER:-support-user}:${SUPPORT_POSTGRES_PASSWORD:-support-password}@n8n-postgres:5432/${SUPPORT_POSTGRES_DB:-support}
-      # MCP Server configuration
-      MCP_SERVER_PORT: ${N8N_MCP_PORT:-3001}
-      MCP_SERVER_HOST: ${N8N_MCP_HOST:-0.0.0.0}
-      # n8n API configuration
-      N8N_API_URL: ${N8N_API_URL:-http://n8n:5678}
-      N8N_API_KEY: ${N8N_API_KEY}
-      # Optional: n8n docs path for enhanced node information
-      N8N_DOCS_PATH: ${N8N_DOCS_PATH:-/app/n8n-docs}UV
-
-      # Logging and debug
-      LOG_LEVEL: ${N8N_MCP_LOG_LEVEL:-info}
-      DEBUG: ${N8N_MCP_DEBUG:-false}
-    volumes:
-      # Optional: Mount n8n docs for enhanced functionality
-      - ${N8N_DOCS_PATH:-./n8n-docs}:/app/n8n-docs:ro
-    deploy:
-      resources:
-        limits:
-          cpus: "1.0"
-          memory: 1G
-        reservations:
-          cpus: "0.5"
-          memory: 512M
-    healthcheck:
-      interval: 30s
-      retries: 5
-      start_period: 30s
-      test: ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
-      timeout: 10s
-
-  # =============================================================================
-  # FUTURE SERVICES (Commented Out - Enable as needed)
-  # =============================================================================
-
-  # Slack MCP Server - Team communication integration
-  # mcp-slack:
-  #   image: mcp/slack:latest
-  #   restart: unless-stopped
-  #   container_name: mcp-slack
-  #   networks:
-  #     - support_network
-  #   ports:
-  #     - ${SLACK_PORT:-3008}:3000
-  #   environment:
-  #     SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
-  #     SLACK_APP_TOKEN: ${SLACK_APP_TOKEN}
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         cpus: "0.5"
-  #         memory: 512M
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #     start_period: 20s
-
-  # Telegram MCP Server - Personal communication integration
-  # mcp-telegram:
-  #   image: mcp/telegram:latest
-  #   restart: unless-stopped
-  #   container_name: mcp-telegram
-  #   networks:
-  #     - support_network
-  #   ports:
-  #     - ${TELEGRAM_PORT:-3009}:3000
-  #   environment:
-  #     TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         cpus: "0.5"
-  #         memory: 512M
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #     start_period: 20s

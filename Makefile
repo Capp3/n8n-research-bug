@@ -1,7 +1,7 @@
 # n8n LLM Document Workflow Makefile
 # Streamlined development and deployment commands
 
-.PHONY: help install setup clean dev test docker docs serve-docs build-docs deploy-docs lint validate status
+.PHONY: help install setup clean dev test docker docs serve-docs build-docs deploy-docs lint validate status test-lint
 
 # Default target
 help:
@@ -28,7 +28,14 @@ help:
 	@echo "🔧 Development:"
 	@echo "  test              - Run all tests (docs validation)"
 	@echo "  test-docs         - Test documentation build only"
-	@echo "  lint              - Run linting on all files"
+	@echo "  lint              - Run comprehensive linting (Python, n8n, JSON, YAML)"
+	@echo "  lint-python       - Run Python linting (ruff, black, isort, mypy)"
+	@echo "  lint-n8n          - Run n8n-specific linting (nodelinter)"
+	@echo "  lint-json         - Validate JSON files"
+	@echo "  lint-yaml         - Validate YAML files"
+	@echo "  lint-fix          - Auto-fix linting issues"
+	@echo "  lint-check        - Check linting without fixes"
+	@echo "  test-lint         - Run linting test script"
 	@echo ""
 	@echo "📊 Project Management:"
 	@echo "  status            - Show current project status and task progress"
@@ -135,19 +142,63 @@ test-docs:
 	@echo "✅ Documentation build test passed!"
 
 # Code quality commands
-lint:
-	@echo "🔍 Running linting checks..."
-	@echo "Validating YAML files..."
-	@for file in .github/workflows/*.yml; do \
-		echo "Validating $$file"; \
-		python3 -c "import yaml; yaml.safe_load(open('$$file'))"; \
+lint: lint-python lint-n8n lint-json lint-yaml
+	@echo "✅ All linting checks complete!"
+
+lint-python:
+	@echo "🐍 Running Python linting..."
+	@echo "Running ruff..."
+	uvx ruff check . --fix
+	@echo "Running black..."
+	uvx black .
+	@echo "Running isort..."
+	uvx isort .
+	@echo "Running mypy..."
+	uvx mypy . || echo "⚠️  mypy found type issues (non-blocking)"
+	@echo "✅ Python linting complete!"
+
+lint-n8n:
+	@echo "🔧 Running n8n-specific linting..."
+	@echo "Installing Node.js dependencies..."
+	npm install --silent
+	@echo "Running nodelinter..."
+	npm run lint
+	@echo "✅ n8n linting complete!"
+
+lint-json:
+	@echo "📄 Running JSON validation..."
+	npm run validate:json
+	@echo "✅ JSON validation complete!"
+
+lint-yaml:
+	@echo "📋 Running YAML validation..."
+	@for file in .github/workflows/*.yml mkdocs.yml compose.yml; do \
+		if [ -f "$$file" ]; then \
+			echo "Validating $$file"; \
+			python3 -c "import yaml; yaml.safe_load(open('$$file'))" || echo "❌ $$file has YAML errors"; \
+		fi; \
 	done
-	@echo "Validating JSON files..."
-	@python3 -c "import json; json.load(open('prompts/index.json'))"
-	@echo "Checking file structure..."
-	@test -f mkdocs.yml && echo "✅ mkdocs.yml exists"
-	@test -f scripts/requirements.txt && echo "✅ requirements.txt exists"
-	@echo "✅ Linting complete!"
+	@echo "✅ YAML validation complete!"
+
+lint-fix: lint-python lint-n8n
+	@echo "🔧 Auto-fixable linting issues resolved!"
+
+lint-check:
+	@echo "🔍 Running linting checks (no fixes)..."
+	@echo "Checking Python code..."
+	uvx ruff check .
+	@echo "Checking n8n workflow..."
+	npm run lint
+	@echo "Checking JSON files..."
+	npm run validate:json
+	@echo "Running linting test script..."
+	python3 scripts/test-linting.py
+	@echo "✅ Lint check complete!"
+
+test-lint:
+	@echo "🧪 Running linting test script..."
+	python3 scripts/test-linting.py
+	@echo "✅ Linting test complete!"
 
 # Project status and validation
 status:

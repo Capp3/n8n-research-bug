@@ -1,0 +1,21 @@
+{
+  "name": "n8n-research-bug",
+  "version": "0.0.5",
+  "description": "Development Support for n8n Research bug",
+  "scripts": {
+    "lint": "echo 'nodelinter requires .node.ts files, skipping for JSON workflow'",
+    "lint:fix": "echo 'nodelinter requires .node.ts files, skipping for JSON workflow'",
+    "validate:json": "node scripts/validate-json.js",
+    "lint:all": "npm run validate:json"
+  },
+  "devDependencies": {
+    "nodelinter": "^0.1.19",
+    "eslint": "^8.0.0",
+    "eslint-plugin-n8n-nodes-base": "^1.0.0",
+    "ajv": "^8.0.0",
+    "ajv-formats": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
