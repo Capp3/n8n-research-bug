@@ -54,6 +54,15 @@ graph TD
     Chat --> Memory
 ```
 
+### MCP Tooling Strategy
+- MCP tools are integral to research and retrieval. Use only self-hostable or free-tier servers.
+- Initial candidates (kept minimal for MVP):
+  - Firecrawl (self-hostable crawling and extraction)
+  - Searxng (self-hosted meta-search; default web search backend)
+- MCP integrations must be toggleable per environment.
+- Research sources should avoid social media platforms; prefer authoritative/documented sources.
+- Citations are inline and URL-only unless otherwise specified by the document template.
+
 ## n8n Workflow Requirements
 
 ### Core Workflow Structure
@@ -61,9 +70,9 @@ The n8n workflow should contain these essential node types:
 - **Form Trigger**: Document submission interface
 - **AI Agent Nodes**: Multi-agent processing (Editor, Research, Reviewer, Merge, Ongoing Chat)
 - **Memory Buffer Window**: Conversation persistence across sessions
-- **Vector Store Operations**: Semantic search using pgvector
+- **PostgreSQL (pgvector) Operations**: Store and query embeddings via n8n PostgreSQL node(s)
 - **GitHub Integration**: File creation and updates
-- **Telegram Integration**: Ongoing conversation interface
+- **Telegram Integration**: Ongoing conversation interface and event-based passive notifications (quiet controlled by user device settings)
 - **HTTP Request Nodes**: Prompt template retrieval
 - **Function/Set Nodes**: Data transformation and validation
 
@@ -86,6 +95,7 @@ graph LR
 - User prompt templates fetched via HTTP from GitHub raw URLs
 - Variable substitution using n8n's `{{$json.variable}}` syntax
 - Dynamic prompt construction based on workflow state
+- Repository-backed prompts are updated via pull requests; avoid editing prompts directly inside the workflow beyond minimal system scaffolding.
 
 ## Technical Architecture Details
 
@@ -138,6 +148,7 @@ graph TB
 ## Project Structure Requirements
 
 ### Repository Organization
+Note: The workflow is imported into n8n and runs there; repository layout is optional scaffolding for templates and examples and is not required at runtime.
 ```
 project-root/
 ├── workflow/
@@ -182,10 +193,10 @@ documents-repository/
 ## Credential Requirements & Setup
 
 ### Essential API Credentials
-1. **OpenAI API**
-   - Purpose: AI agent processing and text embeddings
-   - Required scopes: Chat completions, embeddings
-   - Usage: High volume for document processing
+1. **LLM & Embeddings Provider (via n8n credentials)**
+   - Purpose: AI agent processing and embeddings (provider-agnostic)
+   - Required scopes: As per chosen provider
+   - Usage: Configurable per agent; high volume for document processing
 
 2. **GitHub API**
    - Purpose: Document storage and prompt retrieval
@@ -198,7 +209,8 @@ documents-repository/
    - Usage: Real-time conversation management
 
 ### Recommended Research APIs
-4. **Web Search API** (e.g., Brave, Bing, Google)
+4. **Web Search API**
+   - Default: Self-hosted Searxng
    - Purpose: Real-time information gathering
    - Usage: Research agent knowledge expansion
 
@@ -212,9 +224,14 @@ documents-repository/
    - Required extensions: pgvector for embeddings
    - Schema: Conversation tables with vector similarity support
 
+### Conversation Memory Architecture
+- Separate PostgreSQL instance for chat memory used by the n8n LLM Agent memory.
+- Retention policy: Store all messages; retrieval is capped by a configurable window (default 10 most relevant/most recent as appropriate).
+- Embeddings are stored in PostgreSQL with pgvector; similarity search used for context retrieval bound to the current document.
+
 ### n8n Credential Setup Checklist
 ```
-□ OpenAI API - Chat and embeddings access
+□ LLM & Embeddings credentials (provider-agnostic)
 □ GitHub API - Repository access token
 □ Telegram Bot - Bot token and webhook setup
 □ PostgreSQL - Database connection with pgvector
@@ -302,6 +319,13 @@ documents-repository/
 - **Error Handling**: Graceful degradation with informative user notifications
 - **Memory Management**: Efficient conversation storage with configurable retention
 - **API Rate Limiting**: Respectful usage of external research APIs
+- **Provider-Agnostic LLMs**: Each agent can be assigned its own LLM via n8n's generic LLM/AI nodes; avoid provider-specific blocks to keep configuration easy to change.
+
+### 5. Node Versioning & Docs Alignment
+- Use the most up-to-date n8n nodes and configuration per official docs:
+  - n8n nodes-base: https://github.com/n8n-io/n8n/tree/master/packages/nodes-base
+  - Context7 docs index: https://context7.com/?q=n8n
+- Acceptance criterion: Each node’s configuration is verified against current documentation during implementation and test.
 
 ## Success Metrics & Validation
 
@@ -323,6 +347,21 @@ documents-repository/
 - **Credential Setup**: Straightforward API configuration process
 - **Error Recovery**: Graceful handling of API failures and user errors
 - **Scalability**: Efficient resource usage for large documents and long conversations
+
+### Acceptance Criteria (MVP)
+- Workflow imports cleanly into a fresh n8n instance with no missing nodes.
+- Searxng endpoint configured and used by Research agent for web results.
+- MCP servers configurable and minimal (at least Firecrawl + Searxng), toggleable per environment.
+- Conversation memory persists via PostgreSQL + pgvector; retrieval works across sessions with default cap 10.
+- Prompts are pulled from the repo via HTTP for user templates; system prompts embedded for scaffolding only.
+- Telegram sends conversational messages and event-based passive progress notifications; quiet is governed by the user’s device settings.
+- All nodes verified against latest n8n docs and Context7 index.
+- Each agent can have its own LLM assigned via provider-agnostic n8n nodes (no provider-specific lock-in).
+
+## Non-Goals
+- Building beyond single-document workflows for MVP
+- Custom UI beyond n8n Form + Telegram conversation
+- Integrations requiring paid/closed APIs without self-hosted or free-tier alternatives for MVP
 
 ## Testing Strategy (Import-Friendly)
 
