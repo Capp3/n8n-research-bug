@@ -49,7 +49,7 @@
       "id": "form-trigger",
       "name": "Form Trigger",
       "type": "n8n-nodes-base.formTrigger",
-      "typeVersion": 1,
+      "typeVersion": 2.3,
       "position": [240, 300],
       "webhookId": "research-bug-form"
     },
@@ -95,7 +95,7 @@
       "id": "set-initial-variables",
       "name": "Set Initial Variables",
       "type": "n8n-nodes-base.set",
-      "typeVersion": 1,
+      "typeVersion": 3.4,
       "position": [460, 300]
     },
     {
@@ -109,7 +109,7 @@
       "id": "github-create-document",
       "name": "GitHub - Create Document",
       "type": "n8n-nodes-base.github",
-      "typeVersion": 1,
+      "typeVersion": 1.0,
       "position": [680, 300],
       "credentials": {
         "githubApi": {
@@ -128,7 +128,7 @@
       "id": "postgres-store-session",
       "name": "PostgreSQL - Store Session",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 1,
+      "typeVersion": 2.4,
       "position": [900, 300],
       "credentials": {
         "postgres": {
@@ -139,17 +139,14 @@
     },
     {
       "parameters": {
-        "operation": "select",
-        "table": "chat_memory",
-        "where": "session_id = '{{ $json.session_id }}'",
-        "orderBy": "created_at ASC",
-        "limit": 50
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.session_id }}"
       },
-      "id": "chat-memory-tool",
-      "name": "Chat Memory Tool",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 1,
-      "position": [1120, 200],
+      "id": "chat-memory-editor",
+      "name": "Chat Memory - Editor",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [1000, 100],
       "credentials": {
         "postgres": {
           "id": "postgres-credentials-chat",
@@ -159,14 +156,32 @@
     },
     {
       "parameters": {
-        "operation": "executeQuery",
-        "query": "SELECT content, metadata, 1 - (embedding <=> $1) as similarity FROM document_vectors WHERE 1 - (embedding <=> $1) > 0.7 ORDER BY similarity DESC LIMIT 10"
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.session_id }}"
+      },
+      "id": "chat-memory-research",
+      "name": "Chat Memory - Research",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [1300, 100],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-credentials-chat",
+          "name": "PostgreSQL - Chat Memory"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "tableName": "document_vectors",
+        "vectorColumnName": "embedding"
       },
       "id": "vector-store-tool",
       "name": "Vector Store Tool",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 1,
-      "position": [1120, 100],
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [1300, 200],
       "credentials": {
         "postgres": {
           "id": "postgres-credentials-vectors",
@@ -176,148 +191,125 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "={{ $workflow.settings.mcp_firecrawl_url }}/crawl",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Authorization",
-              "value": "Bearer {{ $workflow.settings.mcp_firecrawl_token }}"
-            }
-          ]
-        },
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "url",
-              "value": "={{ $parameter.url }}"
-            },
-            {
-              "name": "options",
-              "value": "={{ {\"formats\": [\"markdown\"], \"includeTags\": [\"article\", \"main\", \"content\"], \"excludeTags\": [\"nav\", \"footer\", \"aside\"]} }}"
-            }
-          ]
-        }
+        "url": "={{ $workflow.settings.mcp_firecrawl_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "firecrawl-tool",
       "name": "Firecrawl Tool",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 1,
-      "position": [1340, 200]
-    },
-    {
-      "parameters": {
-        "method": "GET",
-        "url": "={{ $workflow.settings.mcp_searxng_url }}/search",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "q",
-              "value": "={{ $parameter.query }}"
-            },
-            {
-              "name": "format",
-              "value": "json"
-            },
-            {
-              "name": "engines",
-              "value": "google,bing,duckduckgo"
-            }
-          ]
-        }
-      },
-      "id": "searxng-tool",
-      "name": "Searxng Tool",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 1,
-      "position": [1340, 100]
-    },
-    {
-      "parameters": {
-        "systemMessage": "You are an expert editor specializing in document structure and clarity.\n\nYour responsibilities:\n1. Structure Enhancement: Improve organization, headings, flow\n2. Style Refinement: Ensure clarity and appropriate tone\n3. Content Gaps: Identify areas needing research\n4. Citation Format: Maintain proper citation standards\n\nTarget audience: {{ $node['Set Initial Variables'].json['target_audience'] }}\n\nUse the Chat Memory tool to understand conversation context.\nFocus on structural improvements while preserving author's voice.",
-        "options": {
-          "temperature": 0.3,
-          "maxTokens": 2000
-        }
-      },
-      "id": "editor-agent",
-      "name": "Editor Agent",
-      "type": "n8n-nodes-langchain.agent",
-      "typeVersion": 1,
-      "position": [1120, 300],
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [1500, 200],
       "credentials": {
-        "lmChatOpenAi": {
-          "id": "openai-credentials-editor",
-          "name": "OpenAI API - Editor"
+        "httpHeaderAuth": {
+          "id": "firecrawl-credentials",
+          "name": "Firecrawl MCP"
         }
       }
     },
     {
       "parameters": {
-        "systemMessage": "You are a research specialist focused on knowledge expansion and verification.\n\nYour responsibilities:\n1. Research Enhancement: Find authoritative sources\n2. Fact Verification: Verify claims with credible citations\n3. Knowledge Gaps: Fill information gaps with sourced content\n4. Source Quality: Prioritize academic and official sources\n5. Tool Selection: Choose appropriate research tools:\n   - URLs to crawl → Use Firecrawl tool\n   - Search queries → Use Searxng tool\n   - Document context → Use Vector Store tool\n   - Chat history → Use Chat Memory tool\n\nAlways provide inline citations in [URL](source) format.\nAvoid social media; prefer documented, authoritative materials.\n\nUse the available tools to conduct thorough research and enhance the document with authoritative sources.",
-        "options": {
-          "temperature": 0.4,
-          "maxTokens": 3000
+        "baseURL": "={{ $workflow.settings.mcp_searxng_url }}"
+      },
+      "id": "searxng-tool",
+      "name": "Searxng Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolSearXng",
+      "typeVersion": 1.0,
+      "position": [1500, 100]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "openai-model",
+      "name": "OpenAI Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.0,
+      "position": [1000, 200],
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-credentials-main",
+          "name": "OpenAI API - Main"
         }
+      }
+    },
+    {
+      "parameters": {
+        "systemMessage": "You are an expert editor specializing in document structure and clarity.\n\nYour responsibilities:\n1. Structure Enhancement: Improve organization, headings, flow\n2. Style Refinement: Ensure clarity and appropriate tone\n3. Content Gaps: Identify areas needing research\n4. Citation Format: Maintain proper citation standards\n\nTarget audience: {{ $json.target_audience }}\n\nUse the Chat Memory to understand conversation context.\nFocus on structural improvements while preserving author's voice.",
+        "options": {}
+      },
+      "id": "editor-agent",
+      "name": "Editor Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "systemMessage": "You are a research specialist focused on knowledge expansion and verification.\n\nYour responsibilities:\n1. Research Enhancement: Find authoritative sources\n2. Fact Verification: Verify claims with credible citations\n3. Knowledge Gaps: Fill information gaps with sourced content\n4. Source Quality: Prioritize academic and official sources\n5. Tool Selection: Choose appropriate research tools:\n   - URLs to crawl → Use Firecrawl tool\n   - Search queries → Use Searxng tool\n   - Document context → Use Vector Store tool\n   - Chat history → Use Chat Memory\n\nAlways provide inline citations in [URL](source) format.\nAvoid social media; prefer documented, authoritative materials.",
+        "options": {}
       },
       "id": "research-agent",
       "name": "Research Agent",
-      "type": "n8n-nodes-langchain.agent",
-      "typeVersion": 1,
-      "position": [1340, 300],
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [1400, 300]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.session_id }}"
+      },
+      "id": "chat-memory-reviewer",
+      "name": "Chat Memory - Reviewer",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [1500, 100],
       "credentials": {
-        "lmChatOpenAi": {
-          "id": "openai-credentials-research",
-          "name": "OpenAI API - Research"
+        "postgres": {
+          "id": "postgres-credentials-chat",
+          "name": "PostgreSQL - Chat Memory"
         }
       }
     },
     {
       "parameters": {
         "systemMessage": "You are a quality reviewer specializing in document assessment.\n\nYour responsibilities:\n1. Quality Assessment: Evaluate content accuracy and completeness\n2. Consistency Check: Ensure tone, style, and formatting\n3. Citation Verification: Check citation format and accessibility\n4. Improvement Suggestions: Provide actionable recommendations\n\nUse Chat Memory to understand the document evolution process.\nUse Vector Store to reference similar quality standards.\nFocus on constructive feedback while preserving document value.",
-        "options": {
-          "temperature": 0.2,
-          "maxTokens": 2500
-        }
+        "options": {}
       },
       "id": "reviewer-agent",
       "name": "Reviewer Agent",
-      "type": "n8n-nodes-langchain.agent",
-      "typeVersion": 1,
-      "position": [1560, 300],
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [1600, 300]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.session_id }}"
+      },
+      "id": "chat-memory-merge",
+      "name": "Chat Memory - Merge",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [1700, 100],
       "credentials": {
-        "lmChatOpenAi": {
-          "id": "openai-credentials-reviewer",
-          "name": "OpenAI API - Reviewer"
+        "postgres": {
+          "id": "postgres-credentials-chat",
+          "name": "PostgreSQL - Chat Memory"
         }
       }
     },
     {
       "parameters": {
         "systemMessage": "You are a document integration specialist creating the final version.\n\nYour responsibilities:\n1. Content Integration: Merge all improvements cohesively\n2. Final Polish: Ensure natural flow and readability\n3. Citation Management: Organize citations consistently\n4. Quality Assurance: Deliver publication-ready document\n\nUse Chat Memory to understand the full improvement process.\nUse Vector Store to reference best practices for final documents.\nCreate the definitive version incorporating all enhancements.",
-        "options": {
-          "temperature": 0.1,
-          "maxTokens": 4000
-        }
+        "options": {}
       },
       "id": "merge-agent",
       "name": "Merge Agent",
-      "type": "n8n-nodes-langchain.agent",
-      "typeVersion": 1,
-      "position": [1780, 300],
-      "credentials": {
-        "lmChatOpenAi": {
-          "id": "openai-credentials-merge",
-          "name": "OpenAI API - Merge"
-        }
-      }
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [1800, 300]
     },
     {
       "parameters": {
@@ -328,7 +320,7 @@
       "id": "generate-embeddings",
       "name": "Generate Embeddings",
       "type": "n8n-nodes-base.openAi",
-      "typeVersion": 1,
+      "typeVersion": 3,
       "position": [2000, 300],
       "credentials": {
         "openAiApi": {
@@ -347,8 +339,8 @@
       "id": "postgres-store-vector",
       "name": "PostgreSQL - Store Document Vector",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 1,
-      "position": [2220, 300],
+      "typeVersion": 2.4,
+      "position": [2200, 300],
       "credentials": {
         "postgres": {
           "id": "postgres-credentials-vectors",
@@ -368,31 +360,12 @@
       "id": "github-update-document",
       "name": "GitHub - Update Document",
       "type": "n8n-nodes-base.github",
-      "typeVersion": 1,
-      "position": [2440, 300],
+      "typeVersion": 1.0,
+      "position": [2400, 300],
       "credentials": {
         "githubApi": {
           "id": "github-credentials-update",
           "name": "GitHub API - Update"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "insert",
-        "table": "chat_memory",
-        "columns": "session_id, role, content, created_at",
-        "values": "={{ $node['Set Initial Variables'].json['session_id'] }}, system, Document processing completed: {{ $node['Set Initial Variables'].json['document_title'] }}, {{ $now.toISO() }}"
-      },
-      "id": "chat-memory-insert",
-      "name": "Chat Memory - Insert",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 1,
-      "position": [2660, 300],
-      "credentials": {
-        "postgres": {
-          "id": "postgres-credentials-chat",
-          "name": "PostgreSQL - Chat Memory"
         }
       }
     },
@@ -405,8 +378,8 @@
       "id": "telegram-send-notification",
       "name": "Telegram - Send Notification",
       "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1,
-      "position": [2880, 300],
+      "typeVersion": 1.2,
+      "position": [2600, 300],
       "credentials": {
         "telegramApi": {
           "id": "telegram-credentials-notification",
@@ -421,7 +394,7 @@
       "id": "telegram-chat-trigger",
       "name": "Telegram - Chat Trigger",
       "type": "n8n-nodes-base.telegramTrigger",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [240, 600],
       "webhookId": "research-bug-chat",
       "credentials": {
@@ -442,7 +415,7 @@
       "id": "postgres-retrieve-session",
       "name": "PostgreSQL - Retrieve Session",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 1,
+      "typeVersion": 2.4,
       "position": [460, 600],
       "credentials": {
         "postgres": {
@@ -466,7 +439,7 @@
       "id": "command-router",
       "name": "Command Router",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
+      "typeVersion": 2.0,
       "position": [680, 600]
     },
     {
@@ -481,7 +454,7 @@
       "id": "postgres-finish-session",
       "name": "PostgreSQL - Finish Session",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 1,
+      "typeVersion": 2.4,
       "position": [900, 500],
       "credentials": {
         "postgres": {
@@ -499,8 +472,8 @@
       "id": "telegram-finish-notification",
       "name": "Telegram - Finish Notification",
       "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1,
-      "position": [1120, 500],
+      "typeVersion": 1.2,
+      "position": [1100, 500],
       "credentials": {
         "telegramApi": {
           "id": "telegram-credentials-finish",
@@ -518,7 +491,7 @@
       "id": "github-get-document",
       "name": "GitHub - Get Current Document",
       "type": "n8n-nodes-base.github",
-      "typeVersion": 1,
+      "typeVersion": 1.0,
       "position": [900, 700],
       "credentials": {
         "githubApi": {
@@ -529,42 +502,31 @@
     },
     {
       "parameters": {
-        "systemMessage": "You are the ongoing conversation manager for the Research Bug system.\n\nYour responsibilities:\n1. Conversation Continuity: Maintain context across sessions\n2. Iterative Improvement: Help users refine documents\n3. Clarification: Ask questions when needed\n4. Action Coordination: Determine when updates are needed\n5. Session Management: Inform users about `/finish` command\n\nUse all available tools to assist the user:\n- Chat Memory: Access conversation history\n- Vector Store: Reference document context and similar content\n- Firecrawl: Research new information when needed\n- Searxng: Find additional sources\n\nAlways reference document context and conversation history.",
-        "options": {
-          "temperature": 0.3,
-          "maxTokens": 2000
-        }
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.session_id }}"
       },
-      "id": "ongoing-chat-agent",
-      "name": "Ongoing Chat Agent",
-      "type": "n8n-nodes-langchain.agent",
-      "typeVersion": 1,
-      "position": [1120, 700],
-      "credentials": {
-        "lmChatOpenAi": {
-          "id": "openai-credentials-chat",
-          "name": "OpenAI API - Chat"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "insert",
-        "table": "chat_memory",
-        "columns": "session_id, role, content, created_at",
-        "values": "={{ $node['PostgreSQL - Retrieve Session'].json.session_id }}, user, {{ $node['Telegram - Chat Trigger'].json.message.text }}, {{ $now.toISO() }}"
-      },
-      "id": "chat-memory-insert-response",
-      "name": "Chat Memory - Insert Response",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 1,
-      "position": [1340, 700],
+      "id": "chat-memory-ongoing",
+      "name": "Chat Memory - Ongoing",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [1000, 800],
       "credentials": {
         "postgres": {
           "id": "postgres-credentials-chat",
           "name": "PostgreSQL - Chat Memory"
         }
       }
+    },
+    {
+      "parameters": {
+        "systemMessage": "You are the ongoing conversation manager for the Research Bug system.\n\nYour responsibilities:\n1. Conversation Continuity: Maintain context across sessions\n2. Iterative Improvement: Help users refine documents\n3. Clarification: Ask questions when needed\n4. Action Coordination: Determine when updates are needed\n5. Session Management: Inform users about `/finish` command\n\nUse all available tools to assist the user:\n- Chat Memory: Access conversation history\n- Vector Store: Reference document context and similar content\n- Firecrawl: Research new information when needed\n- Searxng: Find additional sources\n\nAlways reference document context and conversation history.",
+        "options": {}
+      },
+      "id": "ongoing-chat-agent",
+      "name": "Ongoing Chat Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [1200, 700]
     },
     {
       "parameters": {
@@ -578,8 +540,8 @@
       "id": "telegram-send-response",
       "name": "Telegram - Send Response",
       "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1,
-      "position": [1560, 700],
+      "typeVersion": 1.2,
+      "position": [1400, 700],
       "credentials": {
         "telegramApi": {
           "id": "telegram-credentials-response",
@@ -594,7 +556,7 @@
       "id": "error-trigger",
       "name": "Error Trigger",
       "type": "n8n-nodes-base.errorTrigger",
-      "typeVersion": 1,
+      "typeVersion": 2.0,
       "position": [240, 900]
     },
     {
@@ -623,7 +585,7 @@
       "id": "set-error-variables",
       "name": "Set Error Variables",
       "type": "n8n-nodes-base.set",
-      "typeVersion": 1,
+      "typeVersion": 3.4,
       "position": [460, 900]
     },
     {
@@ -635,7 +597,7 @@
       "id": "telegram-error-notification",
       "name": "Telegram - Error Notification",
       "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1,
+      "typeVersion": 1.2,
       "position": [680, 900],
       "credentials": {
         "telegramApi": {
@@ -690,21 +652,123 @@
         ]
       ]
     },
+    "Chat Memory - Editor": {
+      "ai_memory": [
+        [
+          {
+            "node": "Editor Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Memory - Research": {
+      "ai_memory": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vector Store Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Reviewer Agent",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Merge Agent",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Ongoing Chat Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Ongoing Chat Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Searxng Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Ongoing Chat Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Editor Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Research Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Reviewer Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Merge Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Ongoing Chat Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Editor Agent": {
       "main": [
         [
           {
             "node": "Research Agent",
             "type": "main",
-            "index": 0
-          }
-        ]
-      ],
-      "ai_tool": [
-        [
-          {
-            "node": "Chat Memory Tool",
-            "type": "ai_tool",
             "index": 0
           }
         ]
@@ -719,27 +783,14 @@
             "index": 0
           }
         ]
-      ],
-      "ai_tool": [
+      ]
+    },
+    "Chat Memory - Reviewer": {
+      "ai_memory": [
         [
           {
-            "node": "Chat Memory Tool",
-            "type": "ai_tool",
-            "index": 0
-          },
-          {
-            "node": "Vector Store Tool",
-            "type": "ai_tool",
-            "index": 0
-          },
-          {
-            "node": "Firecrawl Tool",
-            "type": "ai_tool",
-            "index": 0
-          },
-          {
-            "node": "Searxng Tool",
-            "type": "ai_tool",
+            "node": "Reviewer Agent",
+            "type": "ai_memory",
             "index": 0
           }
         ]
@@ -754,17 +805,14 @@
             "index": 0
           }
         ]
-      ],
-      "ai_tool": [
+      ]
+    },
+    "Chat Memory - Merge": {
+      "ai_memory": [
         [
           {
-            "node": "Chat Memory Tool",
-            "type": "ai_tool",
-            "index": 0
-          },
-          {
-            "node": "Vector Store Tool",
-            "type": "ai_tool",
+            "node": "Merge Agent",
+            "type": "ai_memory",
             "index": 0
           }
         ]
@@ -776,20 +824,6 @@
           {
             "node": "Generate Embeddings",
             "type": "main",
-            "index": 0
-          }
-        ]
-      ],
-      "ai_tool": [
-        [
-          {
-            "node": "Chat Memory Tool",
-            "type": "ai_tool",
-            "index": 0
-          },
-          {
-            "node": "Vector Store Tool",
-            "type": "ai_tool",
             "index": 0
           }
         ]
@@ -818,17 +852,6 @@
       ]
     },
     "GitHub - Update Document": {
-      "main": [
-        [
-          {
-            "node": "Chat Memory - Insert",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Chat Memory - Insert": {
       "main": [
         [
           {
@@ -901,42 +924,18 @@
         ]
       ]
     },
-    "Ongoing Chat Agent": {
-      "main": [
+    "Chat Memory - Ongoing": {
+      "ai_memory": [
         [
           {
-            "node": "Chat Memory - Insert Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ],
-      "ai_tool": [
-        [
-          {
-            "node": "Chat Memory Tool",
-            "type": "ai_tool",
-            "index": 0
-          },
-          {
-            "node": "Vector Store Tool",
-            "type": "ai_tool",
-            "index": 0
-          },
-          {
-            "node": "Firecrawl Tool",
-            "type": "ai_tool",
-            "index": 0
-          },
-          {
-            "node": "Searxng Tool",
-            "type": "ai_tool",
+            "node": "Ongoing Chat Agent",
+            "type": "ai_memory",
             "index": 0
           }
         ]
       ]
     },
-    "Chat Memory - Insert Response": {
+    "Ongoing Chat Agent": {
       "main": [
         [
           {
@@ -972,6 +971,7 @@
   },
   "active": false,
   "settings": {
+    "executionOrder": "v1",
     "github_owner": "capp3",
     "documents_repo": "writing",
     "workflow_repo": "n8n-research-bug",

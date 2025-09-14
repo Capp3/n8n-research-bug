@@ -17,3 +17,11 @@ theme:
 
 # Allow warnings without failing the build
 strict: false
+
+nav:
+  - Product Context: productContext.md
+  - System Patterns: systemPatterns.md
+  - Tech Context: techContext.md
+  - Active Context: activeContext.md
+  - Progress: progress.md
+  - Tasks: tasks.md
