@@ -100,7 +100,7 @@ services:
 
   # Main PostgreSQL database - Application data with pgvector support
   support-postgres:
-    image: postgres:17-bookworm
+    image: postgres:18-bookworm
     restart: unless-stopped
     container_name: support-postgres
     shm_size: 128mb # Shared memory for PostgreSQL performance
@@ -135,7 +135,7 @@ services:
 
   # Chat Memory PostgreSQL database - Dedicated for conversation storage
   support-postgres-chat:
-    image: postgres:17-bookworm
+    image: postgres:18-bookworm
     restart: unless-stopped
     container_name: support-postgres-chat
     shm_size: 64mb # Smaller shared memory for chat storage
@@ -194,7 +194,7 @@ services:
 
   # NocoDB PostgreSQL Database - Dedicated database for NocoDB
   nocodb-postgres:
-    image: postgres:17-bookworm
+    image: postgres:18-bookworm
     restart: unless-stopped
     container_name: nocodb-postgres
     shm_size: 128mb
